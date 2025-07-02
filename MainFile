@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Club Spinner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2em;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      width: 250px;
+    }
+    #spinnerCanvas {
+      margin: 2em auto;
+      display: block;
+    }
+    #pointer {
+      position: relative;
+      top: -320px;
+      font-size: 2em;
+      color: red;
+    }
+    #coverImage {
+      max-width: 200px;
+      margin: 1em auto;
+    }
+    #historySection {
+      margin-top: 3em;
+      border-top: 1px solid #ccc;
+      padding-top: 1em;
+    }
+    .history-entry {
+      margin: 0.5em 0;
+    }
+    #adminPanel {
+      margin-top: 2em;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Book Club Submission</h1>
+
+  <div id="formSection">
+    <input type="text" id="name" placeholder="Your Name" required /> <br />
+    <input type="text" id="title" placeholder="Book Title" required /> <br />
+    <input type="text" id="author" placeholder="Author" required /> <br />
+    <button onclick="submitEntry()">Submit</button>
+    <p id="message"></p>
+  </div>
+
+  <div id="waitingSection" style="display:none">
+    <p id="waitingMsg">Waiting for <span id="requiredSubmissions">10</span> submissions...</p>
+  </div>
+
+  <div id="spinnerSection" style="display:none">
+    <h2>Spinning the Wheel...</h2>
+    <canvas id="spinnerCanvas" width="300" height="300"></canvas>
+    <div id="pointer">▼</div>
+  </div>
+
+  <div id="resultSection" style="display:none">
+    <h2>Next Book Club Pick 🎉</h2>
+    <p id="finalChoice"></p>
+    <img id="coverImage" src="" alt="Book Cover" />
+    <p><strong>Check it out:</strong></p>
+    <a id="amazonLink" target="_blank">Amazon</a><br>
+    <a id="abebooksLink" target="_blank">AbeBooks</a><br>
+    <a id="thriftbooksLink" target="_blank">ThriftBooks</a><br>
+    <a id="libraryLink" target="_blank">WorldCat</a>
+    <div id="when2meetDiv"></div>
+  </div>
+
+  <div id="historySection">
+    <h2>📚 Book Club History</h2>
+    <div id="historyList"></div>
+  </div>
+
+  <script>
+    let N = parseInt(localStorage.getItem('requiredSubmissions')) || 1;
+    const submissions = JSON.parse(localStorage.getItem('submissions')) || [];
+    const history = JSON.parse(localStorage.getItem('history')) || [];
+
+    function submitEntry() {
+      const name = document.getElementById('name').value.trim();
+      const title = document.getElementById('title').value.trim();
+      const author = document.getElementById('author').value.trim();
+
+      if (!name || !title || !author) {
+        document.getElementById('message').textContent = 'Please fill in all fields.';
+        return;
+      }
+
+      /*
+      if (submissions.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+        document.getElementById('message').textContent = 'Only one submission allowed per person.';
+        return;
+      }
+*/
+
+      submissions.push({ name, title, author });
+      localStorage.setItem('submissions', JSON.stringify(submissions));
+      document.getElementById('formSection').style.display = 'none';
+      document.getElementById('waitingSection').style.display = 'block';
+      updateWaiting();
+    }
+
+    function updateWaiting() {
+      const msg = document.getElementById('waitingMsg');
+      document.getElementById('requiredSubmissions').textContent = N;
+      msg.textContent = `${submissions.length}/${N} submissions received...`;
+      if (submissions.length >= N) {
+        setTimeout(spinWheel, 1000);
+      }
+    }
+
+    function drawWheel(entries, winnerIndex) {
+      const canvas = document.getElementById('spinnerCanvas');
+      const ctx = canvas.getContext('2d');
+      const numEntries = entries.length;
+      const angle = (2 * Math.PI) / numEntries;
+
+      for (let i = 0; i < numEntries; i++) {
+        ctx.beginPath();
+        ctx.moveTo(150, 150);
+        ctx.fillStyle = i === winnerIndex ? '#ffcc00' : `hsl(${(i * 360) / numEntries}, 70%, 70%)`;
+        ctx.arc(150, 150, 150, i * angle, (i + 1) * angle);
+        ctx.lineTo(150, 150);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(150, 150);
+        ctx.rotate(i * angle + angle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#000';
+        ctx.font = '12px Arial';
+        ctx.fillText(entries[i].title.slice(0, 15), 140, 5);
+        ctx.restore();
+      }
+    }
+
+    function spinWheel() {
+      document.getElementById('waitingSection').style.display = 'none';
+      document.getElementById('spinnerSection').style.display = 'block';
+
+      const winnerIndex = Math.floor(Math.random() * submissions.length);
+      drawWheel(submissions, winnerIndex);
+
+      const winner = submissions[winnerIndex];
+      setTimeout(() => showResult(winner), 3000);
+    }
+
+    function showResult(winner) {
+      // Clear previous submissions
+      submissions.length = 0;
+      localStorage.setItem('submissions', JSON.stringify(submissions));
+      document.getElementById('spinnerSection').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'block';
+
+      const finalText = `"${winner.title}" by ${winner.author} — submitted by ${winner.name}`;
+      document.getElementById('finalChoice').textContent = finalText;
+
+      const query = encodeURIComponent(`${winner.title} ${winner.author}`);
+      document.getElementById('amazonLink').href = `https://www.amazon.com/s?k=${query}`;
+      document.getElementById('abebooksLink').href = `https://www.abebooks.com/servlet/SearchResults?kn=${query}`;
+      document.getElementById('thriftbooksLink').href = `https://www.thriftbooks.com/browse/?b.search=${query}`;
+      document.getElementById('libraryLink').href = `https://www.worldcat.org/search?q=${query}`;
+
+      fetch(`https://www.googleapis.com/books/v1/volumes?q=intitle:${query}`)
+        .then(res => res.json())
+        .then(data => {
+          const img = data.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
+          if (img) document.getElementById('coverImage').src = img;
+        })
+        .catch(() => console.log('Cover not found'));
+
+      history.unshift({ ...winner, date: new Date().toLocaleDateString() });
+      localStorage.setItem('history', JSON.stringify(history));
+      renderHistory();
+      createWhen2Meet();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+      history.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'history-entry';
+        div.textContent = `${entry.date}: "${entry.title}" by ${entry.author} (submitted by ${entry.name})`;
+        list.appendChild(div);
+      });
+    }
+
+    function showAdmin() {
+      const pw = prompt('Enter admin password:');
+      if (pw === 'admin123') {
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('adminN').value = N;
+      }
+    }
+
+    function updateN() {
+      const newN = parseInt(document.getElementById('adminN').value);
+      if (!isNaN(newN) && newN > 0) {
+        N = newN;
+        localStorage.setItem('requiredSubmissions', N);
+        updateWaiting();
+      }
+    }
+
+    function createWhen2Meet() {
+      const base = 'https://www.when2meet.com/?name=';
+      const eventName = encodeURIComponent('Next Bookies Meeting');
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth() + 3, 1);
+      const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+
+      const message = `
+        <p><strong>📅 Plan the Meeting:</strong></p>
+        <a href="${base}${eventName}" target="_blank">Create a When2meet event</a><br>
+        <small>Select dates from ${start.toDateString()} to ${end.toDateString()}<br>
+        Time range: 5:00 PM – 10:00 PM (Central Time)</small>
+      `;
+
+      document.getElementById('when2meetDiv').innerHTML = message;
+    }
+
+    if (submissions.length > 0 && submissions.length < N) {
+      document.getElementById('formSection').style.display = 'none';
+      document.getElementById('waitingSection').style.display = 'block';
+      updateWaiting();
+    }
+
+    renderHistory();
+  </script>
+</body>
+</html>
