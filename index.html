@@ -7,29 +7,19 @@
   <style>
     body { font-family: Arial; text-align: center; padding: 1em; }
     input, button { padding: 8px; margin: 8px; width: 200px; }
-    li.gray { color: gray; }
-    ul { list-style: none; padding: 0; }
     #countdownTimer { font-weight: bold; color: #b22222; margin-top: 10px; }
   </style>
 </head>
 <body>
   <h1>📖 Book Club Submission</h1>
-  <div style="display: flex; justify-content: center;">
-    <div style="margin-right: 2em;">
-      <h3>📋 Members</h3>
-      <ul id="memberList"></ul>
-      <button onclick="addMember()">➕ Add</button>
-      <button onclick="removeMember()">➖ Remove</button>
-    </div>
-    <div>
-      <div id="formSection">
-        <input id="name" placeholder="Your Name"/><br/>
-        <input id="title" placeholder="Book Title"/><br/>
-        <input id="author" placeholder="Author"/><br/>
-        <button onclick="submitEntry()">Submit</button>
-        <p id="message"></p>
-        <p id="countdownTimer"></p>
-      </div>
+  <div>
+    <div id="formSection">
+      <input id="name" placeholder="Your Name"/><br/>
+      <input id="title" placeholder="Book Title"/><br/>
+      <input id="author" placeholder="Author"/><br/>
+      <button onclick="submitEntry()">Submit</button>
+      <p id="message"></p>
+      <p id="countdownTimer"></p>
     </div>
   </div>
 
@@ -37,18 +27,6 @@
 let submissions = JSON.parse(localStorage.getItem('submissions')) || [];
 let members = JSON.parse(localStorage.getItem('members')) || ['leah','jojo','sarah','erika','katie daniels','katie rohrer','kelly','allison'];
 let deadline = localStorage.getItem('deadline'); deadline = deadline ? new Date(deadline) : null;
-
-function renderMembers() {
-  const list = document.getElementById('memberList');
-  list.innerHTML = '';
-  const names = submissions.map(s => s.name.toLowerCase());
-  members.forEach(m => {
-    const li = document.createElement('li');
-    li.textContent = m;
-    if (names.includes(m)) li.classList.add('gray');
-    list.appendChild(li);
-  });
-}
 
 function submitEntry() {
   let name = document.getElementById('name').value.trim().toLowerCase();
@@ -62,15 +40,6 @@ function submitEntry() {
     name = `katie ${which}`;
   }
 
-  if (name === 'leah' && !deadline) {
-    const d = prompt('Set submission deadline (YYYY-MM-DD HH:MM)');
-    if (d) {
-      deadline = new Date(d);
-      localStorage.setItem('deadline', deadline.toISOString());
-      alert('Deadline set!');
-    }
-  }
-
   const idx = submissions.findIndex(s => s.name === name);
   const entry = { name, title, author };
   if (idx >= 0) submissions[idx] = entry;
@@ -78,23 +47,7 @@ function submitEntry() {
   localStorage.setItem('submissions', JSON.stringify(submissions));
 
   document.getElementById('message').textContent = 'Submitted!';
-  renderMembers(); updateCountdown();
-}
-
-function addMember() {
-  const name = prompt('Enter new member name:');
-  if (name && !members.includes(name.toLowerCase())) {
-    members.push(name.toLowerCase());
-    localStorage.setItem('members', JSON.stringify(members));
-    renderMembers();
-  }
-}
-
-function removeMember() {
-  const name = prompt('Enter name to remove:');
-  members = members.filter(m => m !== name.toLowerCase());
-  localStorage.setItem('members', JSON.stringify(members));
-  renderMembers();
+  updateCountdown();
 }
 
 function updateCountdown() {
@@ -111,8 +64,7 @@ function updateCountdown() {
 }
 
 setInterval(updateCountdown, 1000);
-
-renderMembers(); updateCountdown();
+updateCountdown();
 </script>
 </body>
 </html>
