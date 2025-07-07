@@ -3,15 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Book Club Spinner</title>
+  <title>Book Club Submission</title>
   <style>
     body { font-family: Arial; text-align: center; padding: 1em; }
     input, button { padding: 8px; margin: 8px; width: 200px; }
-    #spinnerCanvas { display: block; margin: 1em auto; }
-    #pointer { position: relative; top: -270px; font-size: 2em; color: red; }
-    #coverImage { max-width: 200px; margin: 1em auto; }
-    #historySection { margin-top: 2em; border-top: 1px solid #ccc; padding-top: 1em; }
-    .history-entry { margin: 0.5em 0; }
     li.gray { color: gray; }
     ul { list-style: none; padding: 0; }
     #countdownTimer { font-weight: bold; color: #b22222; margin-top: 10px; }
@@ -35,47 +30,11 @@
         <p id="message"></p>
         <p id="countdownTimer"></p>
       </div>
-
-      <!-- All other sections are unchanged -->
-      <div id="waitingSection" style="display:none">
-        <p id="waitingMsg">Waiting for <span id="requiredSubmissions">10</span> submissions...</p>
-      </div>
-
-      <div id="spinnerSection" style="display:none">
-        <h2>Spinning the Wheel...</h2>
-        <canvas id="spinnerCanvas" width="300" height="300"></canvas>
-        <div id="pointer">▼</div>
-      </div>
-
-      <div id="resultSection" style="display:none">
-        <h2>Next Book Club Pick 🎉</h2>
-        <p id="finalChoice"></p>
-        <img id="coverImage" src="" alt="Book Cover"/>
-        <p><strong>Check it out:</strong></p>
-        <a id="amazonLink" target="_blank">Amazon</a><br/>
-        <a id="abebooksLink" target="_blank">AbeBooks</a><br/>
-        <a id="thriftbooksLink" target="_blank">ThriftBooks</a><br/>
-        <a id="libraryLink" target="_blank">WorldCat</a>
-        <div id="when2meetDiv"></div>
-      </div>
-
-      <div id="historySection">
-        <h2>📚 Book Club History</h2>
-        <div id="historyList"></div>
-      </div>
-
-      <button onclick="showAdmin()">Admin</button>
-      <div id="adminPanel" style="display:none">
-        <p>Required submissions: <input id="adminN" type="number"/>
-        <button onclick="updateN()">Update</button></p>
-      </div>
     </div>
   </div>
 
 <script>
-let N = parseInt(localStorage.getItem('requiredSubmissions')) || 8;
 let submissions = JSON.parse(localStorage.getItem('submissions')) || [];
-let history = JSON.parse(localStorage.getItem('history')) || [];
 let members = JSON.parse(localStorage.getItem('members')) || ['leah','jojo','sarah','erika','katie daniels','katie rohrer','kelly','allison'];
 let deadline = localStorage.getItem('deadline'); deadline = deadline ? new Date(deadline) : null;
 
@@ -118,97 +77,8 @@ function submitEntry() {
   else submissions.push(entry);
   localStorage.setItem('submissions', JSON.stringify(submissions));
 
-  document.getElementById('formSection').style.display = 'none';
-  document.getElementById('waitingSection').style.display = 'block';
-  document.getElementById('message').innerHTML = `<a href="https://loshea1.github.io/BookiesAvailability/" target="_blank">🗓️ Submit Availability</a>`;
-  renderMembers(); updateWaiting(); updateCountdown();
-}
-
-function updateWaiting() {
-  document.getElementById('requiredSubmissions').textContent = N;
-  document.getElementById('waitingMsg').textContent = `${submissions.length}/${N} submissions received...`;
-  if (submissions.length >= N && !deadline) setTimeout(spinWheel, 1000);
-}
-
-function drawWheel(entries, winnerIndex) {
-  const canvas = document.getElementById('spinnerCanvas');
-  const ctx = canvas.getContext('2d');
-  const num = entries.length, angle = (2 * Math.PI) / num;
-  for (let i = 0; i < num; i++) {
-    ctx.beginPath(); ctx.moveTo(150, 150);
-    ctx.fillStyle = i === winnerIndex ? '#ffcc00' : `hsl(${i * 360 / num},70%,70%)`;
-    ctx.arc(150,150,150,i*angle,(i+1)*angle); ctx.lineTo(150,150); ctx.fill();
-    ctx.save(); ctx.translate(150,150); ctx.rotate(i*angle+angle/2);
-    ctx.textAlign = 'right'; ctx.fillStyle = '#000'; ctx.font = '12px Arial';
-    ctx.fillText(entries[i].title.slice(0,15), 140, 5); ctx.restore();
-  }
-}
-
-function spinWheel() {
-  document.getElementById('waitingSection').style.display = 'none';
-  document.getElementById('spinnerSection').style.display = 'block';
-  const winnerIndex = Math.floor(Math.random() * submissions.length);
-  drawWheel(submissions, winnerIndex);
-  const winner = submissions[winnerIndex];
-  setTimeout(() => showResult(winner), 3000);
-}
-
-function showResult(winner) {
-  submissions = []; localStorage.setItem('submissions', JSON.stringify([]));
-  document.getElementById('spinnerSection').style.display = 'none';
-  document.getElementById('resultSection').style.display = 'block';
-
-  document.getElementById('finalChoice').textContent = `"${winner.title}" by ${winner.author} — submitted by ${winner.name}`;
-  const query = encodeURIComponent(`${winner.title} ${winner.author}`);
-  document.getElementById('amazonLink').href = `https://www.amazon.com/s?k=${query}`;
-  document.getElementById('abebooksLink').href = `https://www.abebooks.com/servlet/SearchResults?kn=${query}`;
-  document.getElementById('thriftbooksLink').href = `https://www.thriftbooks.com/browse/?b.search=${query}`;
-  document.getElementById('libraryLink').href = `https://www.worldcat.org/search?q=${query}`;
-
-  fetch(`https://www.googleapis.com/books/v1/volumes?q=intitle:${query}`)
-    .then(res => res.json())
-    .then(data => {
-      const img = data.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
-      if (img) document.getElementById('coverImage').src = img;
-    });
-
-  history.unshift({ ...winner, date: new Date().toLocaleDateString() });
-  localStorage.setItem('history', JSON.stringify(history));
-  renderHistory(); createWhen2Meet();
-}
-
-function renderHistory() {
-  const list = document.getElementById('historyList');
-  list.innerHTML = '';
-  history.forEach((entry, i) => {
-    const div = document.createElement('div');
-    div.className = 'history-entry';
-    div.innerHTML = `${entry.date}: "${entry.title}" by ${entry.author} (submitted by ${entry.name}) <button onclick="deleteHistory(${i})">x</button>`;
-    list.appendChild(div);
-  });
-}
-
-function deleteHistory(i) {
-  history.splice(i, 1);
-  localStorage.setItem('history', JSON.stringify(history));
-  renderHistory();
-}
-
-function showAdmin() {
-  const pw = prompt('Enter admin password:');
-  if (pw === 'admin123') {
-    document.getElementById('adminPanel').style.display = 'block';
-    document.getElementById('adminN').value = N;
-  }
-}
-
-function updateN() {
-  const newN = parseInt(document.getElementById('adminN').value);
-  if (!isNaN(newN) && newN > 0) {
-    N = newN;
-    localStorage.setItem('requiredSubmissions', N);
-    updateWaiting();
-  }
+  document.getElementById('message').textContent = 'Submitted!';
+  renderMembers(); updateCountdown();
 }
 
 function addMember() {
@@ -227,19 +97,6 @@ function removeMember() {
   renderMembers();
 }
 
-function createWhen2Meet() {
-  const base = 'https://www.when2meet.com/?name=';
-  const eventName = encodeURIComponent('Next Bookies Meeting');
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth() + 3, 1);
-  const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
-  document.getElementById('when2meetDiv').innerHTML = `
-    <p><strong>📅 Plan the Meeting:</strong></p>
-    <a href="${base}${eventName}" target="_blank">Create When2meet</a><br/>
-    <small>Pick between ${start.toDateString()} and ${end.toDateString()}<br/>
-    Time: 5–10 PM Central</small>`;
-}
-
 function updateCountdown() {
   const el = document.getElementById('countdownTimer');
   if (!deadline) return el.textContent = '';
@@ -253,21 +110,9 @@ function updateCountdown() {
   el.textContent = `⏳ Time left to submit: ${d}d ${h}h ${m}m ${s}s`;
 }
 
-setInterval(() => {
-  if (deadline && new Date() > deadline && submissions.length >= N) {
-    spinWheel();
-    deadline = null;
-    localStorage.removeItem('deadline');
-  }
-  updateCountdown();
-}, 1000);
+setInterval(updateCountdown, 1000);
 
-if (submissions.length > 0 && submissions.length < N) {
-  document.getElementById('formSection').style.display = 'none';
-  document.getElementById('waitingSection').style.display = 'block';
-  updateWaiting();
-}
-renderMembers(); renderHistory(); updateCountdown();
+renderMembers(); updateCountdown();
 </script>
 </body>
 </html>
