@@ -5,7 +5,26 @@
   <title>Bookies Availability (Firebase)</title>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  
   <style>
+    #availabilityContainer {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    #gridWrapper, #summaryWrapper {
+      width: 100%;
+      max-width: 600px;
+    }
+    @media (min-width: 768px) {
+      #gridWrapper, #summaryWrapper {
+        width: 45%;
+      }
+    }
+    
     body { font-family: Arial, sans-serif; text-align: center; padding: 2em; background: #f4f4f4; }
     h1 { color: #2c5f2d; }
     table { border-collapse: collapse; margin: 2em auto; user-select: none; }
@@ -19,9 +38,31 @@
     #summary { display: none; }
     #resetButton { display: none; margin-top: 1em; background-color: #aa0000; }
     #changeButton { display: none; margin-top: 1em; background-color: #444; }
+
+      nav a {
+  margin: 0 10px;
+  text-decoration: none;
+  color: #2c5f2d;
+  font-weight: bold;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+    
   </style>
 </head>
 <body>
+
+
+  <nav style="margin-bottom: 2em;">
+  <a href="index.html">🏠 Submit</a> |
+  <a href="history.html">📚 History</a> |
+  <a href="availability.html">📆 Availability</a> |
+  <a href="admin.html">🛠️ Admin</a>
+</nav>
+  
+<p id="countdownTimer" style="font-weight: bold; color: #b22222;"></p>
+
   <h1>Next Bookies Meeting Availability</h1>
   <div class="submit-area">
     <input type="text" id="username" placeholder="Your Name" required>
@@ -29,12 +70,45 @@
     <button id="resetButton">Reset All Responses</button>
     <button id="changeButton" onclick="showGrid()">Change Availability</button>
   </div>
-  <div id="grid"></div>
-  <h2>Summary</h2>
-  <div id="summary"></div>
+<div id="availabilityContainer">
+  <div id="gridWrapper">
+    <h3>Your Selection</h3>
+    <div id="grid"></div>
+  </div>
+  <div id="summaryWrapper">
+    <h3>Summary</h3>
+    <div id="summary"></div>
+  </div>
+</div>
+
 
   <script defer>
     window.addEventListener('DOMContentLoaded', () => {
+      const countdownEl = document.getElementById('countdownTimer');
+
+function startCountdown(deadlineISO) {
+  const deadline = new Date(deadlineISO);
+  function updateCountdown() {
+    const now = new Date();
+    const diff = deadline - now;
+    if (diff <= 0) {
+      countdownEl.textContent = "⛔ Availability deadline has passed.";
+      document.getElementById('submitButton').disabled = true;
+      document.getElementById('submitButton').textContent = 'Submissions Closed';
+      document.getElementById('resetButton').style.display = 'inline-block';
+      return;
+    }
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((diff / (1000 * 60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+    countdownEl.textContent = `⏳ Time left to submit: ${d}d ${h}h ${m}m ${s}s`;
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+}
+
+      
       const firebaseConfig = {
         apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
         authDomain: "bookies-availability.firebaseapp.com",
@@ -47,6 +121,12 @@
 
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
+      
+      // Fetch deadline from Firebase and start countdown
+db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
+  const deadlineISO = snapshot.val();
+  if (deadlineISO) startCountdown(deadlineISO);
+});
 
       const startDate = new Date();
       startDate.setMonth(startDate.getMonth() + 3);
