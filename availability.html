@@ -300,14 +300,6 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
       }
 
       document.getElementById('submitButton').addEventListener('click', submitAvailability);
-      document.getElementById('resetButton').addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear all responses?')) {
-          db.ref('responses').remove().then(() => {
-            alert('All responses cleared.');
-            location.reload();
-          });
-        }
-      });
 
       if (new Date() > cutoffDate) {
         document.getElementById('submitButton').disabled = true;
