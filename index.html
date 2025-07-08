@@ -73,6 +73,10 @@ nav a:hover {
 
     const countdownEl = document.getElementById('countdownTimer');
 
+    if (deadline > now) {
+  startCountdown(snapshot.val()); // ← this line was missing
+}
+
     function startCountdown(deadlineISO) {
       const deadline = new Date(deadlineISO);
       function updateCountdown() {
@@ -93,7 +97,8 @@ nav a:hover {
       setInterval(updateCountdown, 1000);
     }
 db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
-  const deadline = new Date(snapshot.val());
+  const deadlineISO = snapshot.val();
+  const deadline = new Date(deadlineISO);
   const now = new Date();
 
   if (now > deadline) {
@@ -122,6 +127,8 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
         });
       }
     });
+  }else {
+    startCountdown(deadlineISO);  // ✅ show countdown if before deadline
   }
 });
 
