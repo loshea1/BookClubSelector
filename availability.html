@@ -155,6 +155,10 @@ userSelect.appendChild(newOption);
   const submitBtn = document.getElementById('submitButton');
   const newNameInput = document.getElementById('newUserInput');
 
+    newNameInput.addEventListener('input', () => {
+  submitBtn.disabled = newNameInput.value.trim() === '';
+});
+
   function formatDate(d) {
     return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
@@ -385,11 +389,15 @@ function submitAvailability() {
   userSelect.addEventListener('change', () => {
       const val = userSelect.value;
   if (val === '__new') {
-    newNameInput.style.display = 'inline-block';
-    newNameInput.value = '';
-    newNameInput.focus();
-    submitBtn.disabled = false;
-  } else if (val) {
+  newNameInput.style.display = 'inline-block';
+  newNameInput.value = '';
+  newNameInput.focus();
+  submitBtn.disabled = true;
+  availability = {};
+  for (const key in cellMap) {
+    cellMap[key].classList.remove('available');
+  }
+  }else if (val) {
     newNameInput.style.display = 'none';
     submitBtn.disabled = false;
     loadUserAvailability(val);
@@ -397,10 +405,6 @@ function submitAvailability() {
     submitBtn.disabled = true;
   }
   });
-
-  newNameInput.addEventListener('input', () => {
-  submitBtn.disabled = newNameInput.value.trim() === '';
-});
 
   submitBtn.addEventListener('click', submitAvailability);
 
