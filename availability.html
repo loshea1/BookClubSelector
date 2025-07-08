@@ -6,10 +6,6 @@
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <select id="usernameSelect" required></select>
-<input type="text" id="newNameInput" placeholder="Enter name" style="display:none;" />
-
-
    <style>
     body {
       font-family: Arial, sans-serif;
@@ -86,11 +82,11 @@
 
  <h1>Next Bookies Meeting Availability</h1>
   <div class="submit-area">
-    <select id="userSelect">
+    <select id="userSelect"> required></select>
       <option value="" disabled selected>Select your name</option>
       <option value="__new">+ New User</option>
     </select>
-    <input type="text" id="newUserInput" placeholder="Enter new name" style="display:none;">
+    <input type="text" id="newUserInput" placeholder="Enter new name" style="display:none;" />
     <button id="submitButton" disabled>Submit</button>
   </div>
 
@@ -277,21 +273,39 @@ usernameSelect.addEventListener('change', () => {
   }
 
   // Submit current availability for selected user
-  function submitAvailability() {
-    if (!userSelect.value) {
-      alert('Please select your name first');
-      return;
-    }
+function submitAvailability() {
+  let selected = userSelect.value;
 
-    if (new Date() > cutoffDate) {
-      alert('Sorry, submissions are now closed.');
-      return;
-    }
-
-    db.ref('responses/' + userSelect.value).set(availability).then(() => {
-      loadSummary();
-    });
+  if (!selected) {
+    alert('Please select your name');
+    return;
   }
+
+  let name = selected;
+
+  if (selected === '__new') {
+    name = document.getElementById('newUserInput').value.trim();
+    if (!name) {
+      alert('Please enter your name');
+      return;
+    }
+  }
+
+  if (new Date() > cutoffDate) {
+    alert('Sorry, submissions are now closed.');
+    return;
+  }
+
+  db.ref('responses/' + name).set(availability).then(() => {
+    alert('Availability submitted!');
+    document.getElementById('newUserInput').style.display = 'none';
+    document.getElementById('newUserInput').value = '';
+    loadUsers();
+    loadSummary();
+    userSelect.value = name;  // Set the dropdown to the new user
+  });
+}
+
 
   // Load summary of all availability
   function loadSummary() {
@@ -378,7 +392,14 @@ usernameSelect.addEventListener('change', () => {
 
   // Event listeners
   userSelect.addEventListener('change', () => {
-    loadUserAvailability(userSelect.value);
+      const val = userSelect.value;
+  if (val === '__new') {
+    document.getElementById('newUserInput').style.display = 'inline-block';
+    submitBtn.disabled = false;
+  } else {
+    document.getElementById('newUserInput').style.display = 'none';
+    loadUserAvailability(val);
+  }
   });
 
   submitBtn.addEventListener('click', submitAvailability);
