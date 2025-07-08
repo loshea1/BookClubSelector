@@ -84,9 +84,7 @@
   <div class="submit-area">
     <select id="userSelect" required>
       <option value="" disabled selected>Select your name</option>
-      //option value="__new">+ New User
     </select>
-    //input type="text" id="newUserInput" placeholder="Enter new name" style="display:none;"
     <button id="submitButton" disabled>Submit</button>
   </div>
 
@@ -115,7 +113,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-populateDropdownFromFirebase();
 
     // Date setup
   //const startDate = new Date();
@@ -186,28 +183,6 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
 });
   
   // Populate dropdown with existing users
-db.ref('responses').once('value').then(snapshot => {
-  const data = snapshot.val() || {};
-  const names = Object.keys(data);
-userSelect.innerHTML = '<option value="" disabled selected>Select your name</option>';
-names.forEach(name => {
-  const option = document.createElement('option');
-  option.value = name;
-  option.textContent = name;
-  userSelect.appendChild(option);
-});
-
-//const newOption = document.createElement('option');
-//newOption.value = '__new';
-//newOption.textContent = '+ New User';
-//userSelect.appendChild(newOption);
-
-});
-
- //   newNameInput.addEventListener('input', () => {
- // submitBtn.disabled = newNameInput.value.trim() === '';
-//});
-
   function populateDropdownFromFirebase() {
   db.ref('members').once('value').then(snapshot => {
     const members = snapshot.val() || [];
@@ -216,6 +191,13 @@ names.forEach(name => {
       ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
     `;
   });
+
+    const savedName = localStorage.getItem('bookiesUser');
+if (savedName && userSelect.querySelector(`option[value="${savedName}"]`)) {
+  userSelect.value = savedName;
+  loadUserAvailability(savedName);
+}
+
 }
 
 
@@ -277,7 +259,7 @@ names.forEach(name => {
   }
 
   // Load all users who submitted availability and populate dropdown
-  function loadUsers() {
+/*  function loadUsers() {
     db.ref('responses').once('value').then(snapshot => {
       const data = snapshot.val() || {};
       const users = Object.keys(data).sort();
@@ -297,33 +279,32 @@ names.forEach(name => {
       //userSelect.disabled = users.length === 0;
       submitBtn.disabled = true;
     });
-  }
+  }*/
 
   // Load availability for selected user and update grid
-  function loadUserAvailability(user) {
-    if (!user) return;
+function loadUserAvailability(user) {
+  if (!user) return;
 
-    db.ref('responses/' + user).once('value').then(snapshot => {
-      const data = snapshot.val() || {};
-      availability = {}; // reset local availability
+  db.ref('responses/' + user).once('value').then(snapshot => {
+    const data = snapshot.val() || {};
+    availability = {}; // reset local availability
 
-      // Update availability state from DB
-      for (const key in data) {
-        availability[key] = !!data[key];
+    for (const key in data) {
+      availability[key] = !!data[key];
+    }
+
+    for (const key in cellMap) {
+      if (availability[key]) {
+        cellMap[key].classList.add('available');
+      } else {
+        cellMap[key].classList.remove('available');
       }
+    }
 
-      // Update grid cells visually
-      for (const key in cellMap) {
-        if (availability[key]) {
-          cellMap[key].classList.add('available');
-        } else {
-          cellMap[key].classList.remove('available');
-        }
-      }
+    submitBtn.disabled = false;
+  });
+}
 
-      submitBtn.disabled = false;
-    });
-  }
 
   // Submit current availability for selected user
 function submitAvailability() {
@@ -333,23 +314,13 @@ function submitAvailability() {
     alert('Please select your name');
     return;
   }
-
-  let name = selected;
-
-  if (selected === '__new') {
-    name = document.getElementById('newUserInput').value.trim();
-    if (!name) {
-      alert('Please select your name');
-      return;
-    }
-  }
-
+  
   if (new Date() > cutoffDate) {
     alert('Sorry, submissions are now closed.');
     return;
   }
 
-  db.ref('responses/' + name).set(availability).then(() => {
+  db.ref('responses/' + selected).set(availability).then(() => {
 
                 // Change submit button text to "Re-submit"
       const submitBtn = document.getElementById('submitButton');
@@ -361,6 +332,9 @@ function submitAvailability() {
     //userSelect.value = name;  // Set the dropdown to the new user
 
   });
+
+  localStorage.setItem('bookiesUser', selected);
+
 }
 
 
@@ -450,7 +424,7 @@ function submitAvailability() {
   // Event listeners
   userSelect.addEventListener('change', () => {
       const val = userSelect.value;
-  if (val === '__new') {
+  if (val === '') {
   submitBtn.disabled = true;
   availability = {};
   for (const key in cellMap) {
@@ -467,8 +441,10 @@ function submitAvailability() {
   submitBtn.addEventListener('click', submitAvailability);
 
   //generateGrid();
-  loadUsers();
+  //loadUsers();
   //loadSummary();
+  
+populateDropdownFromFirebase();
 });
 </script>
 </body>
