@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Book Club Submission</title>
@@ -28,62 +32,112 @@ nav a:hover {
   <a href="availability.html">📆 Availability</a> |
   <a href="admin.html">🛠️ Admin</a>
 </nav>
-
-
+  
   <h1>📖 Book Club Submission</h1>
-  <div>
-    <div id="formSection">
-      <input id="name" placeholder="Your Name"/><br/>
-      <input id="title" placeholder="Book Title"/><br/>
-      <input id="author" placeholder="Author"/><br/>
-      <button onclick="submitEntry()">Submit</button>
-      <p id="message"></p>
-      <p id="countdownTimer"></p>
-    </div>
+  <p id="countdownTimer" style="font-weight: bold; color: #b22222;"></p>
+
+  <div id="formSection">
+    <input id="name" placeholder="Your Name"/><br/>
+    <input id="title" placeholder="Book Title"/><br/>
+    <input id="author" placeholder="Author"/><br/>
+    <button onclick="submitEntry()">Submit</button>
+    <p id="message"></p>
   </div>
 
-<script>
-let submissions = JSON.parse(localStorage.getItem('submissions')) || [];
-let members = JSON.parse(localStorage.getItem('members')) || ['leah','jojo','sarah','erika','katie daniels','katie rohrer','kelly','allison'];
-let deadline = localStorage.getItem('deadline'); deadline = deadline ? new Date(deadline) : null;
+  <h2>📚 Submitted Books</h2>
+  <table id="submissionTable" border="1" style="margin: auto; margin-top: 20px;">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Title</th>
+        <th>Author</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-function submitEntry() {
-  let name = document.getElementById('name').value.trim().toLowerCase();
-  const title = document.getElementById('title').value.trim();
-  const author = document.getElementById('author').value.trim();
-  if (!name || !title || !author) return document.getElementById('message').textContent = 'Fill all fields.';
+<script defer>
+  window.addEventListener('DOMContentLoaded', () => {
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
+      authDomain: "bookies-availability.firebaseapp.com",
+      databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
+      projectId: "bookies-availability",
+      storageBucket: "bookies-availability.appspot.com",
+      messagingSenderId: "429713911832",
+      appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
+    };
 
-  if (name === 'katie') {
-    const which = prompt('Which Katie? (daniels or rohrer)');
-    if (!['daniels','rohrer'].includes(which)) return;
-    name = `katie ${which}`;
-  }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-  const idx = submissions.findIndex(s => s.name === name);
-  const entry = { name, title, author };
-  if (idx >= 0) submissions[idx] = entry;
-  else submissions.push(entry);
-  localStorage.setItem('submissions', JSON.stringify(submissions));
+    const countdownEl = document.getElementById('countdownTimer');
 
-  document.getElementById('message').textContent = 'Submitted!';
-  updateCountdown();
-}
+    function startCountdown(deadlineISO) {
+      const deadline = new Date(deadlineISO);
+      function updateCountdown() {
+        const now = new Date();
+        const diff = deadline - now;
+        if (diff <= 0) {
+          countdownEl.textContent = "⛔ Submission deadline has passed.";
+          document.getElementById('formSection').style.display = 'none';
+          return;
+        }
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / (1000 * 60)) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+        countdownEl.textContent = `⏳ Time left to submit: ${d}d ${h}h ${m}m ${s}s`;
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    }
 
-function updateCountdown() {
-  const el = document.getElementById('countdownTimer');
-  if (!deadline) return el.textContent = '';
-  const now = new Date();
-  const diff = deadline - now;
-  if (diff <= 0) return el.textContent = '';
-  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-  const m = Math.floor((diff / (1000 * 60)) % 60);
-  const s = Math.floor((diff / 1000) % 60);
-  el.textContent = `⏳ Time left to submit: ${d}d ${h}h ${m}m ${s}s`;
-}
+    db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
+      const deadlineISO = snapshot.val();
+      if (deadlineISO) startCountdown(deadlineISO);
+    });
 
-setInterval(updateCountdown, 1000);
-updateCountdown();
+    function loadSubmissions() {
+      db.ref('submissions').once('value').then(snapshot => {
+        const data = snapshot.val() || {};
+        const tbody = document.querySelector('#submissionTable tbody');
+        tbody.innerHTML = '';
+        Object.entries(data).forEach(([name, { title, author }]) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${name}</td><td>${title}</td><td>${author}</td>`;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    window.submitEntry = () => {
+      let name = document.getElementById('name').value.trim().toLowerCase();
+      const title = document.getElementById('title').value.trim();
+      const author = document.getElementById('author').value.trim();
+      const msg = document.getElementById('message');
+
+      if (!name || !title || !author) {
+        msg.textContent = '⚠️ Fill all fields.';
+        return;
+      }
+
+      if (name === 'katie') {
+        const which = prompt('Which Katie? (daniels or rohrer)');
+        if (!['daniels', 'rohrer'].includes(which)) return;
+        name = `katie ${which}`;
+      }
+
+      const entry = { title, author };
+      db.ref('submissions/' + name).set(entry).then(() => {
+        msg.textContent = '✅ Submitted!';
+        loadSubmissions();
+      });
+    };
+
+    loadSubmissions();
+  });
+
 </script>
 </body>
 </html>
