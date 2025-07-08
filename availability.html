@@ -162,15 +162,11 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
     cutoffDate = new Date(deadlineStr);
     
     // Set startDate to 3 months after cutoffDate
-    //window.startDate = new Date(cutoffDate);
-    //startDate.setMonth(startDate.getMonth() + 3);
+    window.startDate = new Date(cutoffDate);
+    window.startDate.setMonth(window.startDate.getMonth() + 3);
     //startDate.setDate(1);
-    //window.endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
-    const startMonth = cutoffDate.getMonth() + 3;
-const startYear = cutoffDate.getFullYear() + Math.floor(startMonth / 12);
-const adjustedMonth = startMonth % 12;
-window.startDate = new Date(startYear, adjustedMonth, 1);
-window.endDate = new Date(startYear, adjustedMonth + 1, 0);
+    window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 0);
+
 
     startCountdown();
     generateGrid();
