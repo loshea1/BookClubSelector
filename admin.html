@@ -26,6 +26,9 @@
   </nav>
 
   <h1>Bookies Admin Panel</h1>
+<h2>Availability Responses</h2>
+<button onclick="refreshAvailability()">🔄 Refresh Availability</button>
+<div id="availabilityDisplay" style="margin-top:1em; max-height:400px; overflow-y:auto; text-align:left; background:#fff; padding:10px; border:1px solid #ccc;"></div>
 
 <h2>Members</h2>
 <table id="memberTable" style="margin: auto;">
@@ -167,6 +170,37 @@
         });
 
       };
+
+      function refreshAvailability() {
+  const display = document.getElementById('availabilityDisplay');
+  display.textContent = 'Loading...';
+
+  firebase.database().ref('responses').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (!data) {
+      display.textContent = 'No availability responses yet.';
+      return;
+    }
+
+    let html = '<ul>';
+    for (const user in data) {
+      html += `<li><strong>${user}</strong>:<ul>`;
+      const userAvail = data[user];
+      for (const key in userAvail) {
+        if (userAvail[key]) {
+          html += `<li>${key.replace('_', ' at ')} available</li>`;
+        }
+      }
+      html += '</ul></li>';
+    }
+    html += '</ul>';
+
+    display.innerHTML = html;
+  }).catch(err => {
+    display.textContent = 'Error loading availability: ' + err.message;
+  });
+}
+
 
 
       loadMembers();
