@@ -29,6 +29,7 @@
 
   <h2>Members</h2>
   <ul id="memberList"></ul>
+  let members = JSON.parse(localStorage.getItem('members')) || ['leah','jojo','sarah','erika','katie daniels','katie rohrer','kelly','allison'];
   <input type="text" id="newMember" placeholder="Add member">
   <button onclick="addMember()">Add</button>
 
