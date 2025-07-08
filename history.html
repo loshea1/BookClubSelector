@@ -67,30 +67,26 @@ nav a:hover {
       const tableBody = document.querySelector('#historyTable tbody');
 
       function loadHistory() {
-        db.ref('history').once('value').then(snapshot => {
-          const data = snapshot.val();
-          tableBody.innerHTML = '';
+db.ref('history').once('value').then(snapshot => {
+  const entry = snapshot.val();
+  tableBody.innerHTML = '';
 
-          if (data) {
-            Object.entries(data).forEach(([key, entry]) => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${entry.title}</td>
-                <td>${entry.author}</td>
-                <td>${entry.submitter}</td>
-                <td>${entry.date ? new Date(entry.date).toLocaleDateString() : ''}</td>
+  if (entry) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${entry.title}</td>
+      <td>${entry.author}</td>
+      <td>${entry.submitter}</td>
+      <td>${entry.date || ''}</td>
+      <td>${isAdmin() ? `<span class="delete-btn" onclick="deleteEntry()">&#x2716;</span>` : ''}</td>
+    `;
+    tableBody.appendChild(row);
+  }
+});
 
-                //DELETE ONCE WEBSITE IS LIVE
-                <td><span class="delete-btn" onclick="deleteEntry('${key}')">&#x2716;</span></td>
-              `;
-              tableBody.appendChild(row);
-            });
-          }
-        });
       }
 //DELETE AFTER WEBSITE IS LIVE----------------------------------------
       window.deleteEntry = (key) => {
-        if (confirm('Delete this book from history?')) {
           db.ref('history/' + key).remove().then(loadHistory);
         }
       };
