@@ -6,6 +6,10 @@
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
+  <select id="usernameSelect" required></select>
+<input type="text" id="newNameInput" placeholder="Enter name" style="display:none;" />
+
+
    <style>
     body {
       font-family: Arial, sans-serif;
@@ -59,6 +63,14 @@
       color: #b22222;
       margin-bottom: 1em;
     }
+
+     table, td, th {
+  -webkit-user-select: none;  /* Chrome/Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+ */
+  user-select: none;          /* Standard */
+}
+
   </style>
 </head>
 <body>
@@ -107,6 +119,39 @@ window.addEventListener('DOMContentLoaded', () => {
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+
+  // Populate dropdown with existing users
+const usernameSelect = document.getElementById('usernameSelect');
+const newNameInput = document.getElementById('newNameInput');
+
+db.ref('responses').once('value').then(snapshot => {
+  const data = snapshot.val() || {};
+  const names = Object.keys(data);
+  usernameSelect.innerHTML = '<option value="">-- Select your name --</option>';
+  names.forEach(name => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    usernameSelect.appendChild(option);
+  });
+
+  const customOption = document.createElement('option');
+  customOption.value = '__new__';
+  customOption.textContent = 'Enter new name...';
+  usernameSelect.appendChild(customOption);
+});
+
+// Handle name selection
+usernameSelect.addEventListener('change', () => {
+  if (usernameSelect.value === '__new__') {
+    newNameInput.style.display = 'inline-block';
+    newNameInput.focus();
+  } else {
+    newNameInput.style.display = 'none';
+    loadUserAvailability(usernameSelect.value); // Load existing availability
+  }
+});
+
 
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() + 3);
@@ -244,7 +289,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     db.ref('responses/' + userSelect.value).set(availability).then(() => {
-      alert('Availability submitted!');
       loadSummary();
     });
   }
