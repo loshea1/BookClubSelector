@@ -37,7 +37,6 @@
     button { padding: 10px 20px; background-color: #2c5f2d; color: white; border: none; cursor: pointer; margin-left: 10px; }
     #summary { display: none; }
     #resetButton { display: none; margin-top: 1em; background-color: #aa0000; }
-    #changeButton { display: none; margin-top: 1em; background-color: #444; }
 
       nav a {
   margin: 0 10px;
@@ -68,7 +67,6 @@ nav a:hover {
     <input type="text" id="username" placeholder="Your Name" required>
     <button id="submitButton">Submit</button>
     <button id="resetButton">Reset All Responses</button>
-    <button id="changeButton" onclick="showGrid()">Change Availability</button>
   </div>
 <div id="availabilityContainer">
   <div id="gridWrapper">
@@ -206,17 +204,9 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
         if (!name) return alert('Please enter your name');
 
         db.ref('responses/' + name).once('value').then(snapshot => {
-          const existingData = snapshot.val();
-          if (existingData) {
-            const confirmOverwrite = confirm('You already submitted availability. Overwrite?');
-            if (!confirmOverwrite) return;
-          }
-
+   
           db.ref('responses/' + name).set(availability).then(() => {
-            alert('Availability submitted!');
-            //document.getElementById('grid').style.display = 'none';
             document.getElementById('summary').style.display = 'block';
-            document.getElementById('changeButton').style.display = 'inline-block';
 
             loadSummary();
           });
@@ -237,7 +227,6 @@ function addAvailabilityChangeListeners() {
       function showGrid() {
         document.getElementById('grid').style.display = 'block';
         document.getElementById('summary').style.display = 'none';
-        document.getElementById('changeButton').style.display = 'none';
       }
 
       function loadSummary() {
