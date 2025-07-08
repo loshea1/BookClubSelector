@@ -73,10 +73,6 @@ nav a:hover {
 
     const countdownEl = document.getElementById('countdownTimer');
 
-    if (deadline > now) {
-  startCountdown(snapshot.val()); // ← this line was missing
-}
-
     function startCountdown(deadlineISO) {
       const deadline = new Date(deadlineISO);
       function updateCountdown() {
