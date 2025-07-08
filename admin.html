@@ -46,6 +46,11 @@
     <input type="datetime-local" id="availabilityDeadline">
     <button onclick="updateDeadline('availabilityDeadline')">Save</button>
   </div>
+  
+  <table id="memberTable" style="margin: auto;">
+  <tbody></tbody>
+</table>
+
 
   <script>
     
@@ -68,31 +73,37 @@
       const availabilityDeadlineInput = document.getElementById('availabilityDeadline');
 
     // Load and render members from Firebase
-    function loadMembers() {
-const memberTable = document.getElementById('memberTable').querySelector('tbody');
-memberTable.innerHTML = '';
+      function loadMembers() {
+  db.ref('members').once('value').then(snapshot => {
+    const members = snapshot.val() || [];
+    const memberTable = document.getElementById('memberTable').querySelector('tbody');
+    memberTable.innerHTML = '';
 
-for (let i = 0; i < members.length; i += 2) {
-  const row = document.createElement('tr');
+    for (let i = 0; i < members.length; i += 2) {
+      const row = document.createElement('tr');
 
-  for (let j = 0; j < 2; j++) {
-    const name = members[i + j];
-    const cell = document.createElement('td');
-    if (name) {
-      cell.textContent = name;
-      const x = document.createElement('span');
-      x.textContent = ' ✖';
-      x.className = 'delete-btn';
-      x.onclick = () => deleteMember(i + j);
-      cell.appendChild(x);
+      for (let j = 0; j < 2; j++) {
+        const idx = i + j;
+        const name = members[idx];
+        const cell = document.createElement('td');
+
+        if (name) {
+          cell.textContent = name;
+          const x = document.createElement('span');
+          x.textContent = ' ✖';
+          x.className = 'delete-btn';
+          x.onclick = () => deleteMember(idx);
+          cell.appendChild(x);
+        }
+
+        row.appendChild(cell);
+      }
+
+      memberTable.appendChild(row);
     }
-    row.appendChild(cell);
-  }
-
-  memberTable.appendChild(row);
+  });
 }
 
-    }
       function loadDeadlines() {
         db.ref('settings').once('value').then(snapshot => {
           const settings = snapshot.val() || {};
