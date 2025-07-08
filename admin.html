@@ -125,6 +125,10 @@
         db.ref('settings/' + key).set(new Date(date).toISOString()).then(() => {
           alert('Deadline updated!');
         });
+        db.ref('settings/bookSubmissionDeadline').set(newDate).then(() => {
+  db.ref('selectedBook').remove(); // Reset selection
+});
+
       };
 
       loadMembers();
