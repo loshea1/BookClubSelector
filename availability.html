@@ -222,6 +222,37 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
         document.getElementById('summary').style.display = 'none';
       }
 
+      
+      function refreshAvailability() {
+  const display = document.getElementById('availabilityDisplay');
+  display.textContent = 'Loading...';
+
+  firebase.database().ref('responses').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (!data) {
+      display.textContent = 'No availability responses yet.';
+      return;
+    }
+
+    let html = '<ul>';
+    for (const user in data) {
+      html += `<li><strong>${user}</strong>:<ul>`;
+      const userAvail = data[user];
+      for (const key in userAvail) {
+        if (userAvail[key]) {
+          html += `<li>${key.replace('_', ' at ')} available</li>`;
+        }
+      }
+      html += '</ul></li>';
+    }
+    html += '</ul>';
+
+    display.innerHTML = html;
+  }).catch(err => {
+    display.textContent = 'Error loading availability: ' + err.message;
+  });
+}
+
       function loadSummary() {
         db.ref('responses').once('value').then(snapshot => {
           const data = snapshot.val() || {};
