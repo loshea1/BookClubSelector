@@ -5,28 +5,7 @@
   <title>Bookies Availability (Firebase)</title>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <body>
-  <h1>Next Bookies Meeting Availability</h1>
-  <p id="countdownTimer" style="font-weight: bold; color: #b22222;"></p>
-
-  <div class="submit-area">
-    <input type="text" id="username" placeholder="Your Name" required>
-    <button id="submitButton">Submit</button>
-    <button id="resetButton">Reset All Responses</button>
-    <button id="changeButton" onclick="showGrid()">Change Availability</button>
-  </div>
-
-  <div id="availabilityContainer">
-    <div id="gridWrapper">
-      <h3>Your Selection</h3>
-      <div id="grid"></div>
-    </div>
-    <div id="summaryWrapper">
-      <h3>Summary</h3>
-      <div id="summary"></div>
-    </div>
-  </div>
-
+  
   <style>
     #availabilityContainer {
       display: flex;
@@ -45,9 +24,7 @@
         width: 45%;
       }
     }
-  </style>
-
-  <style>
+    
     body { font-family: Arial, sans-serif; text-align: center; padding: 2em; background: #f4f4f4; }
     h1 { color: #2c5f2d; }
     table { border-collapse: collapse; margin: 2em auto; user-select: none; }
@@ -83,7 +60,8 @@ nav a:hover {
   <a href="availability.html">📆 Availability</a> |
   <a href="admin.html">🛠️ Admin</a>
 </nav>
-
+  
+<p id="countdownTimer" style="font-weight: bold; color: #b22222;"></p>
 
   <h1>Next Bookies Meeting Availability</h1>
   <div class="submit-area">
@@ -92,9 +70,17 @@ nav a:hover {
     <button id="resetButton">Reset All Responses</button>
     <button id="changeButton" onclick="showGrid()">Change Availability</button>
   </div>
-  <div id="grid"></div>
-  <h2>Summary</h2>
-  <div id="summary"></div>
+<div id="availabilityContainer">
+  <div id="gridWrapper">
+    <h3>Your Selection</h3>
+    <div id="grid"></div>
+  </div>
+  <div id="summaryWrapper">
+    <h3>Summary</h3>
+    <div id="summary"></div>
+  </div>
+</div>
+
 
   <script defer>
     window.addEventListener('DOMContentLoaded', () => {
