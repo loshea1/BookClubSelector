@@ -66,24 +66,29 @@
 
     // Load and render members from Firebase
     function loadMembers() {
-      db.ref('members').once('value').then(snapshot => {
-        const members = snapshot.val() || [];
-        memberList.innerHTML = '';
-        members.forEach((name, idx) => {
-          const li = document.createElement('li');
-          li.textContent = name;
+const memberTable = document.getElementById('memberTable').querySelector('tbody');
+memberTable.innerHTML = '';
 
-          const delBtn = document.createElement('button');
-          delBtn.textContent = '✖';
-          delBtn.style.marginLeft = '5px';
-          delBtn.style.color = 'red';
-          delBtn.style.cursor = 'pointer';
-          delBtn.onclick = () => deleteMember(idx);
+for (let i = 0; i < members.length; i += 2) {
+  const row = document.createElement('tr');
 
-          li.appendChild(delBtn);
-          memberList.appendChild(li);
-        });
-      });
+  for (let j = 0; j < 2; j++) {
+    const name = members[i + j];
+    const cell = document.createElement('td');
+    if (name) {
+      cell.textContent = name;
+      const x = document.createElement('span');
+      x.textContent = ' ✖';
+      x.className = 'delete-btn';
+      x.onclick = () => deleteMember(i + j);
+      cell.appendChild(x);
+    }
+    row.appendChild(cell);
+  }
+
+  memberTable.appendChild(row);
+}
+
     }
       function loadDeadlines() {
         db.ref('settings').once('value').then(snapshot => {
