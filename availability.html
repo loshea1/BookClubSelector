@@ -332,7 +332,13 @@ function submitAvailability() {
   db.ref('responses/' + name).set(availability).then(() => {
     document.getElementById('newUserInput').style.display = 'none';
     document.getElementById('newUserInput').value = '';
-    loadUsers();
+
+                // Change submit button text to "Re-submit"
+      const submitBtn = document.getElementById('submitButton');
+      submitBtn.textContent = "Re-submit";
+
+    
+    //loadUsers();
     loadSummary();
     //userSelect.value = name;  // Set the dropdown to the new user
 
