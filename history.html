@@ -77,8 +77,10 @@ nav a:hover {
               row.innerHTML = `
                 <td>${entry.title}</td>
                 <td>${entry.author}</td>
-                <td>${entry.submitter.replace(/\b\w/g, l => l.toUpperCase())}</td>
+                <td>${entry.submitter}</td>
                 <td>${entry.date ? new Date(entry.date).toLocaleDateString() : ''}</td>
+
+                //DELETE ONCE WEBSITE IS LIVE
                 <td><span class="delete-btn" onclick="deleteEntry('${key}')">&#x2716;</span></td>
               `;
               tableBody.appendChild(row);
@@ -86,13 +88,13 @@ nav a:hover {
           }
         });
       }
-
+//DELETE AFTER WEBSITE IS LIVE----------------------------------------
       window.deleteEntry = (key) => {
         if (confirm('Delete this book from history?')) {
           db.ref('history/' + key).remove().then(loadHistory);
         }
       };
-
+//----------------------------------------------------------------------
       loadHistory();
     });
   </script>
