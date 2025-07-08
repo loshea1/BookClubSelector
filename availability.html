@@ -398,6 +398,10 @@ function submitAvailability() {
   }
   });
 
+  newNameInput.addEventListener('input', () => {
+  submitBtn.disabled = newNameInput.value.trim() === '';
+});
+
   submitBtn.addEventListener('click', submitAvailability);
 
   generateGrid();
