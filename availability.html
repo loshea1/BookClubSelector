@@ -169,15 +169,16 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
   const deadlineStr = snapshot.val();
   if (deadlineStr) {
     cutoffDate = new Date(deadlineStr);
-
-// Set startDate to 3 months after cutoffDate
-const startDate = new Date(cutoffDate);
-startDate.setMonth(startDate.getMonth() + 3);
-startDate.setDate(1);
-
-const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+    
+    // Set startDate to 3 months after cutoffDate
+    window.startDate = new Date(cutoffDate);
+    startDate.setMonth(startDate.getMonth() + 3);
+    startDate.setDate(1);
+    window.endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
 
     startCountdown();
+    generateGrid();
+    loadSummary();
   } else {
     countdownTimer.textContent = "No deadline set by admin yet.";
   }
@@ -460,9 +461,9 @@ function submitAvailability() {
 
   submitBtn.addEventListener('click', submitAvailability);
 
-  generateGrid();
+  //generateGrid();
   loadUsers();
-  loadSummary();
+  //loadSummary();
 });
 </script>
 </body>
