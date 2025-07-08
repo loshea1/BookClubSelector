@@ -214,13 +214,25 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
 
           db.ref('responses/' + name).set(availability).then(() => {
             alert('Availability submitted!');
-            document.getElementById('grid').style.display = 'none';
+            //document.getElementById('grid').style.display = 'none';
             document.getElementById('summary').style.display = 'block';
             document.getElementById('changeButton').style.display = 'inline-block';
+
             loadSummary();
           });
         });
       }
+      // Add event listeners to availability cells to change submit button text on user changes
+function addAvailabilityChangeListeners() {
+  Object.values(cellMap).forEach(td => {
+    td.addEventListener('click', () => {
+      const submitBtn = document.getElementById('submitButton');
+      if (submitBtn.textContent !== "Re-submit") {
+        submitBtn.textContent = "Re-submit";
+      }
+    });
+  });
+}
 
       function showGrid() {
         document.getElementById('grid').style.display = 'block';
@@ -322,6 +334,7 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
       }
 
       generateGrid();
+      addAvailabilityChangeListeners();
     });
   </script>
 </body>
