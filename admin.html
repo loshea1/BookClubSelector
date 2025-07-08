@@ -10,30 +10,20 @@
     h1 { color: #2c5f2d; }
     ul { list-style: none; padding: 0; }
     li { padding: 5px; }
-    input[type="text"], input[type="number"] { padding: 8px; margin: 10px; width: 200px; }
-    button { padding: 10px 15px; background-color: #2c5f2d; color: white; border: none; cursor: pointer; }
+    input, button { padding: 8px; margin: 10px; }
+    button { background-color: #2c5f2d; color: white; border: none; cursor: pointer; }
     .delete-btn { color: red; cursor: pointer; margin-left: 10px; }
-
-      nav a {
-  margin: 0 10px;
-  text-decoration: none;
-  color: #2c5f2d;
-  font-weight: bold;
-}
-nav a:hover {
-  text-decoration: underline;
-}
+    nav a { margin: 0 10px; text-decoration: none; color: #2c5f2d; font-weight: bold; }
+    nav a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-
   <nav style="margin-bottom: 2em;">
-  <a href="index.html">🏠 Submit</a> |
-  <a href="history.html">📚 History</a> |
-  <a href="availability.html">📆 Availability</a> |
-  <a href="admin.html">🛠️ Admin</a>
-</nav>
-
+    <a href="index.html">🏠 Submit</a> |
+    <a href="history.html">📚 History</a> |
+    <a href="availability.html">📆 Availability</a> |
+    <a href="admin.html">🛠️ Admin</a>
+  </nav>
 
   <h1>Bookies Admin Panel</h1>
 
@@ -42,12 +32,19 @@ nav a:hover {
   <input type="text" id="newMember" placeholder="Add member">
   <button onclick="addMember()">Add</button>
 
-  <h2>Settings</h2>
-  <label for="submissionLimit">Submission Limit:</label>
-  <input type="number" id="submissionLimit" min="1">
-  <button onclick="updateLimit()">Update Limit</button>
+  <h2>Submission Deadlines</h2>
+  <div>
+    <label>Book Submission Deadline:</label>
+    <input type="datetime-local" id="bookDeadline">
+    <button onclick="updateDeadline('bookSubmissionDeadline')">Save</button>
+  </div>
+  <div>
+    <label>Availability Submission Deadline:</label>
+    <input type="datetime-local" id="availabilityDeadline">
+    <button onclick="updateDeadline('availabilityDeadline')">Save</button>
+  </div>
 
-  <script defer>
+  <script>
     window.addEventListener('DOMContentLoaded', () => {
       const firebaseConfig = {
         apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
@@ -63,7 +60,8 @@ nav a:hover {
       const db = firebase.database();
 
       const memberList = document.getElementById('memberList');
-      const submissionLimitInput = document.getElementById('submissionLimit');
+      const bookDeadlineInput = document.getElementById('bookDeadline');
+      const availabilityDeadlineInput = document.getElementById('availabilityDeadline');
 
       function loadMembers() {
         db.ref('members').once('value').then(snapshot => {
@@ -82,10 +80,20 @@ nav a:hover {
         });
       }
 
-      function loadSettings() {
-        db.ref('settings/submissionLimit').once('value').then(snapshot => {
-          submissionLimitInput.value = snapshot.val() || 10;
+      function loadDeadlines() {
+        db.ref('settings').once('value').then(snapshot => {
+          const settings = snapshot.val() || {};
+          if (settings.bookSubmissionDeadline)
+            bookDeadlineInput.value = formatForInput(settings.bookSubmissionDeadline);
+          if (settings.availabilityDeadline)
+            availabilityDeadlineInput.value = formatForInput(settings.availabilityDeadline);
         });
+      }
+
+      function formatForInput(isoString) {
+        const dt = new Date(isoString);
+        const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0,16);
       }
 
       window.addMember = () => {
@@ -109,16 +117,17 @@ nav a:hover {
         });
       };
 
-      window.updateLimit = () => {
-        const val = parseInt(submissionLimitInput.value);
-        if (val > 0) {
-          db.ref('settings/submissionLimit').set(val);
-          alert('Submission limit updated.');
-        }
+      window.updateDeadline = (key) => {
+        const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
+        const date = input.value;
+        if (!date) return alert('Pick a date/time first');
+        db.ref('settings/' + key).set(new Date(date).toISOString()).then(() => {
+          alert('Deadline updated!');
+        });
       };
 
       loadMembers();
-      loadSettings();
+      loadDeadlines();
     });
   </script>
 </body>
