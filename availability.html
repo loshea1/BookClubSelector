@@ -83,10 +83,10 @@
  <h1>Next Bookies Meeting Availability</h1>
   <div class="submit-area">
     <select id="userSelect" required>
-      //<option value="" disabled selected>Select your name</option>
-      <option value="__new">+ New User</option>
+      <option value="" disabled selected>Select your name</option>
+      //option value="__new">+ New User
     </select>
-    <input type="text" id="newUserInput" placeholder="Enter new name" style="display:none;" />
+    //input type="text" id="newUserInput" placeholder="Enter new name" style="display:none;"
     <button id="submitButton" disabled>Submit</button>
   </div>
 
@@ -115,6 +115,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+populateDropdownFromFirebase();
 
     // Date setup
   //const startDate = new Date();
@@ -128,7 +129,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const countdownTimer = document.getElementById('countdownTimer');
   const userSelect = document.getElementById('userSelect');
   const submitBtn = document.getElementById('submitButton');
-  const newNameInput = document.getElementById('newUserInput');
+  //const newNameInput = document.getElementById('newUserInput');
 
   // Availability state
   let availability = {};
@@ -196,16 +197,27 @@ names.forEach(name => {
   userSelect.appendChild(option);
 });
 
-const newOption = document.createElement('option');
-newOption.value = '__new';
-newOption.textContent = '+ New User';
-userSelect.appendChild(newOption);
+//const newOption = document.createElement('option');
+//newOption.value = '__new';
+//newOption.textContent = '+ New User';
+//userSelect.appendChild(newOption);
 
 });
 
-    newNameInput.addEventListener('input', () => {
-  submitBtn.disabled = newNameInput.value.trim() === '';
-});
+ //   newNameInput.addEventListener('input', () => {
+ // submitBtn.disabled = newNameInput.value.trim() === '';
+//});
+
+  function populateDropdownFromFirebase() {
+  db.ref('members').once('value').then(snapshot => {
+    const members = snapshot.val() || [];
+    userSelect.innerHTML = `
+      <option value="" disabled selected>Select your name</option>
+      ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
+    `;
+  });
+}
+
 
   function formatDate(d) {
     return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -272,7 +284,6 @@ userSelect.appendChild(newOption);
 
           userSelect.innerHTML = `
       <option value="" disabled selected>Select your name</option>
-      <option value="__new">+ New User</option>
     `;
 
       users.forEach(user => {
@@ -328,7 +339,7 @@ function submitAvailability() {
   if (selected === '__new') {
     name = document.getElementById('newUserInput').value.trim();
     if (!name) {
-      alert('Please enter your name');
+      alert('Please select your name');
       return;
     }
   }
@@ -339,8 +350,6 @@ function submitAvailability() {
   }
 
   db.ref('responses/' + name).set(availability).then(() => {
-    document.getElementById('newUserInput').style.display = 'none';
-    document.getElementById('newUserInput').value = '';
 
                 // Change submit button text to "Re-submit"
       const submitBtn = document.getElementById('submitButton');
@@ -442,16 +451,12 @@ function submitAvailability() {
   userSelect.addEventListener('change', () => {
       const val = userSelect.value;
   if (val === '__new') {
-  newNameInput.style.display = 'inline-block';
-  newNameInput.value = '';
-  newNameInput.focus();
   submitBtn.disabled = true;
   availability = {};
   for (const key in cellMap) {
     cellMap[key].classList.remove('available');
   }
   }else if (val) {
-    newNameInput.style.display = 'none';
     submitBtn.disabled = false;
     loadUserAvailability(val);
   } else {
