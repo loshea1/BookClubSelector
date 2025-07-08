@@ -173,8 +173,9 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
   } else {
     countdownTimer.textContent = "No deadline set by admin yet.";
   }
+});
+  
   // Populate dropdown with existing users
-
 db.ref('responses').once('value').then(snapshot => {
   const data = snapshot.val() || {};
   const names = Object.keys(data);
