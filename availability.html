@@ -134,24 +134,7 @@ newOption.value = '__new';
 newOption.textContent = '+ New User';
 userSelect.appendChild(newOption);
 
-
-  const customOption = document.createElement('option');
-  customOption.value = '__new__';
-  customOption.textContent = 'Enter new name...';
-  usernameSelect.appendChild(customOption);
 });
-
-// Handle name selection
-usernameSelect.addEventListener('change', () => {
-  if (usernameSelect.value === '__new__') {
-    newNameInput.style.display = 'inline-block';
-    newNameInput.focus();
-  } else {
-    newNameInput.style.display = 'none';
-    loadUserAvailability(usernameSelect.value); // Load existing availability
-  }
-});
-
 
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() + 3);
@@ -170,6 +153,7 @@ usernameSelect.addEventListener('change', () => {
 
   const userSelect = document.getElementById('userSelect');
   const submitBtn = document.getElementById('submitButton');
+  const newNameInput = document.getElementById('newUserInput');
 
   function formatDate(d) {
     return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -234,15 +218,17 @@ usernameSelect.addEventListener('change', () => {
       const data = snapshot.val() || {};
       const users = Object.keys(data).sort();
 
-      // Clear and add default option
-      //userSelect.innerHTML = '<option value="" disabled selected>Select your name</option>';
+          userSelect.innerHTML = `
+      <option value="" disabled selected>Select your name</option>
+      <option value="__new">+ New User</option>
+    `;
 
-      //users.forEach(user => {
+      users.forEach(user => {
         const option = document.createElement('option');
         option.value = user;
         option.textContent = user;
         userSelect.appendChild(option);
-      //});
+      });
 
       // Enable submit button only if user selected
       userSelect.disabled = users.length === 0;
@@ -399,11 +385,16 @@ function submitAvailability() {
   userSelect.addEventListener('change', () => {
       const val = userSelect.value;
   if (val === '__new') {
-    document.getElementById('newUserInput').style.display = 'inline-block';
+    newNameInput.style.display = 'inline-block';
+    newNameInput.value = '';
+    newNameInput.focus();
     submitBtn.disabled = false;
-  } else {
-    document.getElementById('newUserInput').style.display = 'none';
+  } else if (val) {
+    newNameInput.style.display = 'none';
+    submitBtn.disabled = false;
     loadUserAvailability(val);
+  } else {
+    submitBtn.disabled = true;
   }
   });
 
