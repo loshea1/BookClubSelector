@@ -330,7 +330,6 @@ function submitAvailability() {
   }
 
   db.ref('responses/' + name).set(availability).then(() => {
-    alert('Availability submitted!');
     document.getElementById('newUserInput').style.display = 'none';
     document.getElementById('newUserInput').value = '';
     loadUsers();
