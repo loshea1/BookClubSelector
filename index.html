@@ -170,14 +170,14 @@ function showRandomWinner() {
       winnerMsg.textContent = `🎉 Next book is "${book.title}" by ${book.author}!`;
       document.body.appendChild(winnerMsg);
 
-      // Save to history (timestamped)
-      const historyEntry = {
-        name: randomName,
-        title: book.title,
-        author: book.author,
-        selectedAt: new Date().toISOString()
-      };
-      db.ref('history').push(historyEntry);
+      // Save as a single object instead of pushing multiple
+db.ref('history').set({
+  title: selectedBook.title,
+  author: selectedBook.author,
+  submitter: selectedName,
+  date: new Date().toLocaleDateString()
+});
+
     }
   });
 }
