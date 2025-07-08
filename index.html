@@ -111,29 +111,40 @@ nav a:hover {
       });
     }
 
-    window.submitEntry = () => {
-      let name = document.getElementById('name').value.trim().toLowerCase();
-      const title = document.getElementById('title').value.trim();
-      const author = document.getElementById('author').value.trim();
-      const msg = document.getElementById('message');
+window.submitEntry = () => {
+  let name = document.getElementById('name').value.trim().toLowerCase();
+  const title = document.getElementById('title').value.trim();
+  const author = document.getElementById('author').value.trim();
+  const msg = document.getElementById('message');
+  const submitBtn = document.querySelector('button[onclick="submitEntry()"]');
 
-      if (!name || !title || !author) {
-        msg.textContent = '⚠️ Fill all fields.';
-        return;
-      }
+  if (!name || !title || !author) {
+    msg.textContent = '⚠️ Fill all fields.';
+    return;
+  }
 
-      if (name === 'katie') {
-        const which = prompt('Which Katie? (daniels or rohrer)');
-        if (!['daniels', 'rohrer'].includes(which)) return;
-        name = `katie ${which}`;
-      }
+  if (name === 'katie') {
+    const which = prompt('Which Katie? (daniels or rohrer)');
+    if (!['daniels', 'rohrer'].includes(which)) return;
+    name = `katie ${which}`;
+  }
 
-      const entry = { title, author };
-      db.ref('submissions/' + name).set(entry).then(() => {
-        msg.textContent = '✅ Submitted!';
-        loadSubmissions();
-      });
-    };
+  db.ref('submissions/' + name).once('value').then(snapshot => {
+    const existing = snapshot.val();
+    if (existing) {
+      const confirmOverwrite = confirm('You already submitted a book. Overwrite?');
+      if (!confirmOverwrite) return;
+    }
+
+    const entry = { title, author };
+    db.ref('submissions/' + name).set(entry).then(() => {
+      msg.textContent = existing ? '🔁 Re-submitted!' : '✅ Submitted!';
+      submitBtn.textContent = 'Re-submit';
+      loadSubmissions();
+    });
+  });
+};
+
 
     loadSubmissions();
   });
