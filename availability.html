@@ -82,7 +82,7 @@
 
  <h1>Next Bookies Meeting Availability</h1>
   <div class="submit-area">
-    <select id="userSelect" required></select>
+    <select id="userSelect" required>
       <option value="" disabled selected>Select your name</option>
       <option value="__new">+ New User</option>
     </select>
@@ -121,13 +121,19 @@ window.addEventListener('DOMContentLoaded', () => {
 db.ref('responses').once('value').then(snapshot => {
   const data = snapshot.val() || {};
   const names = Object.keys(data);
-  usernameSelect.innerHTML = '<option value="">-- Select your name --</option>';
-  names.forEach(name => {
-    const option = document.createElement('option');
-    option.value = name;
-    option.textContent = name;
-    usernameSelect.appendChild(option);
-  });
+userSelect.innerHTML = '<option value="" disabled selected>Select your name</option>';
+names.forEach(name => {
+  const option = document.createElement('option');
+  option.value = name;
+  option.textContent = name;
+  userSelect.appendChild(option);
+});
+
+const newOption = document.createElement('option');
+newOption.value = '__new';
+newOption.textContent = '+ New User';
+userSelect.appendChild(newOption);
+
 
   const customOption = document.createElement('option');
   customOption.value = '__new__';
@@ -301,12 +307,6 @@ function submitAvailability() {
     loadUsers();
     loadSummary();
     userSelect.value = name;  // Set the dropdown to the new user
-
-    const newOption = document.createElement('option');
-newOption.value = name;
-newOption.textContent = name;
-userSelect.appendChild(newOption);
-userSelect.value = name;
 
   });
 }
