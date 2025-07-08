@@ -29,7 +29,6 @@
 
   <h2>Members</h2>
   <ul id="memberList"></ul>
-  let members = JSON.parse(localStorage.getItem('members')) || ['leah','jojo','sarah','erika','katie daniels','katie rohrer','kelly','allison'];
   <input type="text" id="newMember" placeholder="Add member">
   <button onclick="addMember()">Add</button>
 
@@ -46,6 +45,8 @@
   </div>
 
   <script>
+    let members = JSON.parse(localStorage.getItem('members')) || ['leah','jojo','sarah','erika','katie daniels','katie rohrer','kelly','allison'];
+    
     window.addEventListener('DOMContentLoaded', () => {
       const firebaseConfig = {
         apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
@@ -64,23 +65,27 @@
       const bookDeadlineInput = document.getElementById('bookDeadline');
       const availabilityDeadlineInput = document.getElementById('availabilityDeadline');
 
-      function loadMembers() {
-        db.ref('members').once('value').then(snapshot => {
-          const members = snapshot.val() || [];
-          memberList.innerHTML = '';
-          members.forEach((name, idx) => {
-            const li = document.createElement('li');
-            li.textContent = name;
-            const x = document.createElement('span');
-            x.textContent = '✖';
-            x.className = 'delete-btn';
-            x.onclick = () => deleteMember(idx);
-            li.appendChild(x);
-            memberList.appendChild(li);
-          });
-        });
-      }
+    // Load and render members from Firebase
+    function loadMembers() {
+      db.ref('members').once('value').then(snapshot => {
+        const members = snapshot.val() || [];
+        memberList.innerHTML = '';
+        members.forEach((name, idx) => {
+          const li = document.createElement('li');
+          li.textContent = name;
 
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '✖';
+          delBtn.style.marginLeft = '10px';
+          delBtn.style.color = 'red';
+          delBtn.style.cursor = 'pointer';
+          delBtn.onclick = () => deleteMember(idx);
+
+          li.appendChild(delBtn);
+          memberList.appendChild(li);
+        });
+      });
+    }
       function loadDeadlines() {
         db.ref('settings').once('value').then(snapshot => {
           const settings = snapshot.val() || {};
@@ -97,39 +102,54 @@
         return local.toISOString().slice(0,16);
       }
 
-      window.addMember = () => {
-        const name = document.getElementById('newMember').value.trim();
-        if (!name) return;
-        db.ref('members').once('value').then(snapshot => {
-          const members = snapshot.val() || [];
-          if (!members.includes(name)) {
-            members.push(name);
-            db.ref('members').set(members).then(loadMembers);
-            document.getElementById('newMember').value = '';
-          }
-        });
-      };
 
-      window.deleteMember = (index) => {
-        db.ref('members').once('value').then(snapshot => {
-          const members = snapshot.val() || [];
-          members.splice(index, 1);
-          db.ref('members').set(members).then(loadMembers);
+    // Add a new member
+    window.addMember = () => {
+      const input = document.getElementById('newMember');
+      const name = input.value.trim();
+      if (!name) return alert('Enter a name');
+
+      db.ref('members').once('value').then(snapshot => {
+        const members = snapshot.val() || [];
+        if (members.includes(name)) {
+          alert('Member already exists');
+          return;
+        }
+        members.push(name);
+        db.ref('members').set(members).then(() => {
+          input.value = '';
+          loadMembers();
         });
-      };
+      });
+    };
+
+          // Delete a member by index
+    function deleteMember(index) {
+      if (!confirm('Remove this member?')) return;
+      db.ref('members').once('value').then(snapshot => {
+        const members = snapshot.val() || [];
+        members.splice(index, 1);
+        db.ref('members').set(members).then(loadMembers);
+      });
+    }
 
       window.updateDeadline = (key) => {
         const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
         const date = input.value;
         if (!date) return alert('Pick a date/time first');
-        db.ref('settings/' + key).set(new Date(date).toISOString()).then(() => {
+        const isoDate = new Date(date).toISOString();
+
+        db.ref('settings/' + key).set(isoDate).then(() => {
           alert('Deadline updated!');
+          // If book submission deadline was updated, clear selectedBook to reset selection
+          if (key === 'bookSubmissionDeadline') {
+            db.ref('selectedBook').remove();
+            // Optionally clear history? Or you might keep it.
+          }
         });
-        db.ref('settings/bookSubmissionDeadline').set(newDate).then(() => {
-  db.ref('selectedBook').remove(); // Reset selection
-});
 
       };
+
 
       loadMembers();
       loadDeadlines();
