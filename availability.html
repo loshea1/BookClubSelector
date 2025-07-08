@@ -82,7 +82,7 @@
 
  <h1>Next Bookies Meeting Availability</h1>
   <div class="submit-area">
-    <select id="userSelect"> required></select>
+    <select id="userSelect" required></select>
       <option value="" disabled selected>Select your name</option>
       <option value="__new">+ New User</option>
     </select>
@@ -117,8 +117,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const db = firebase.database();
 
   // Populate dropdown with existing users
-const usernameSelect = document.getElementById('usernameSelect');
-const newNameInput = document.getElementById('newNameInput');
 
 db.ref('responses').once('value').then(snapshot => {
   const data = snapshot.val() || {};
@@ -231,14 +229,14 @@ usernameSelect.addEventListener('change', () => {
       const users = Object.keys(data).sort();
 
       // Clear and add default option
-      userSelect.innerHTML = '<option value="" disabled selected>Select your name</option>';
+      //userSelect.innerHTML = '<option value="" disabled selected>Select your name</option>';
 
-      users.forEach(user => {
+      //users.forEach(user => {
         const option = document.createElement('option');
         option.value = user;
         option.textContent = user;
         userSelect.appendChild(option);
-      });
+      //});
 
       // Enable submit button only if user selected
       userSelect.disabled = users.length === 0;
@@ -303,6 +301,13 @@ function submitAvailability() {
     loadUsers();
     loadSummary();
     userSelect.value = name;  // Set the dropdown to the new user
+
+    const newOption = document.createElement('option');
+newOption.value = name;
+newOption.textContent = name;
+userSelect.appendChild(newOption);
+userSelect.value = name;
+
   });
 }
 
