@@ -170,7 +170,7 @@
         });
 
       };
-function resetAvailability() {
+window.resetAvailability = function() {
   if (!confirm('Are you sure you want to delete all availability responses? This cannot be undone.')) return;
 
   db.ref('responses').remove()
