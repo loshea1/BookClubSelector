@@ -162,9 +162,9 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
     cutoffDate = new Date(deadlineStr); //deadline from firebase
     window.startDate = new Date(cutoffDate); // Set startDate to 3 months after cutoffDate
     window.startDate.setMonth(window.startDate.getMonth() + 3);
-    const newDeadline = new Date(startDate);
-    newDeadline.setDate(newDeadline.getDate()+30);
-    window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 0); //new deadline is 30 days after startDate
+    //const newDeadline = new Date(startDate);
+    //newDeadline.setDate(newDeadline.getDate()+30);
+    window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 30); //new deadline is 30 days after startDate
 
 
     startCountdown();
