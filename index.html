@@ -75,7 +75,7 @@ nav a:hover {
     //const countdownEl = document.getElementById('countdownTimer');
     const countdownTimer = document.getElementById('countdownTimer');
     let timerInterval = null;
-    let cutoffDate = null;
+    cutoffDate = new Date(deadlineISO);
     
     function startCountdown() {
     if (!cutoffDate) return;
