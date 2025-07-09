@@ -75,7 +75,6 @@ nav a:hover {
     //const countdownEl = document.getElementById('countdownTimer');
     const countdownTimer = document.getElementById('countdownTimer');
     let timerInterval = null;
-    cutoffDate = new Date(deadlineISO);
     
     function startCountdown() {
     if (!cutoffDate) return;
@@ -117,7 +116,9 @@ nav a:hover {
     }*/
 db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
   const deadlineISO = snapshot.val();
-  const deadline = new Date(deadlineISO);
+  
+    cutoffDate = new Date(deadlineISO);
+  //const deadline = new Date(deadlineISO);
   const now = new Date();
 
   if (now > deadline) {
