@@ -5,8 +5,7 @@
   <title>Bookies Availability (Firebase)</title>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-   <style>
+  <style>
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
@@ -19,9 +18,7 @@
       color: #2c5f2d;
       font-weight: bold;
     }
-    nav a:hover {
-      text-decoration: underline;
-    }
+    nav a:hover { text-decoration: underline; }
     #availabilityContainer {
       display: flex;
       justify-content: space-around;
@@ -47,10 +44,8 @@
       text-align: center;
     }
     td.available { background-color: #a8e6a1; }
-    .submit-area {
-      margin-bottom: 1em;
-    }
-    select, input[type="text"], button {
+    .submit-area { margin-bottom: 1em; }
+    select, button {
       padding: 10px;
       margin: 5px;
     }
@@ -59,28 +54,22 @@
       color: #b22222;
       margin-bottom: 1em;
     }
-
-     table, td, th {
-  -webkit-user-select: none;  /* Chrome/Safari */
-  -moz-user-select: none;     /* Firefox */
-  -ms-user-select: none;      /* IE10+ */
-  user-select: none;          /* Standard */
-}
-
+    table, td, th {
+      user-select: none;
+    }
   </style>
 </head>
 <body>
-
-<nav style="margin-bottom: 2em;">
-  <a href="index.html">🏠 Submit</a> |
-  <a href="history.html">📚 History</a> |
-  <a href="availability.html">📆 Availability</a> |
-  <a href="admin.html">🛠️ Admin</a>
-</nav>
+  <nav style="margin-bottom: 2em;">
+    <a href="index.html">🏠 Submit</a> |
+    <a href="history.html">📚 History</a> |
+    <a href="availability.html">📆 Availability</a> |
+    <a href="admin.html">🛠️ Admin</a>
+  </nav>
 
   <p id="countdownTimer"></p>
+  <h1>Next Bookies Meeting Availability</h1>
 
- <h1>Next Bookies Meeting Availability</h1>
   <div class="submit-area">
     <select id="userSelect" required>
       <option value="" disabled selected>Select your name</option>
@@ -101,263 +90,164 @@
 
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-  const firebaseConfig = {
-    apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
-    authDomain: "bookies-availability.firebaseapp.com",
-    databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
-    projectId: "bookies-availability",
-    storageBucket: "bookies-availability.appspot.com",
-    messagingSenderId: "429713911832",
-    appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
-  };
-
+  const firebaseConfig = { /* Firebase config */ };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const hours = [17, 18, 19, 20, 21, 22];
 
-  // DOM elements
   const countdownTimer = document.getElementById('countdownTimer');
   const userSelect = document.getElementById('userSelect');
   const submitBtn = document.getElementById('submitButton');
-  //const newNameInput = document.getElementById('newUserInput');
 
-  // Availability state
   let availability = {};
   const cellMap = {};
   let isMouseDown = false;
   let toggleState = null;
   let cutoffDate = null;
   let timerInterval = null;
-  
-function startCountdown(){
-if (!cutoffDate) return; 
-  
-  // Countdown timer
-  //let timerInterval;
-  function updateCountdown() {
-    const now = new Date();
-    const diff = cutoffDate - now;
 
-    if (diff <= 0) {
-      countdownTimer.textContent = "Submissions are now closed.";
-      if (timerInterval) clearInterval(timerInterval);
-      return;
+  // Start the countdown timer to submission deadline
+  function startCountdown() {
+    if (!cutoffDate) return;
+    function updateCountdown() {
+      const now = new Date();
+      const diff = cutoffDate - now;
+      if (diff <= 0) {
+        countdownTimer.textContent = "Submissions are now closed.";
+        clearInterval(timerInterval);
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      countdownTimer.textContent = `Deadline in ${days}d ${hrs}h ${mins}m ${secs}s`;
     }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const mins = Math.floor((diff / (1000 * 60)) % 60);
-    const secs = Math.floor((diff / 1000) % 60);
-
-    countdownTimer.textContent = `Deadline in ${days}d ${hrs}h ${mins}m ${secs}s`;
+    timerInterval = setInterval(updateCountdown, 1000);
+    updateCountdown();
   }
 
-  timerInterval = setInterval(updateCountdown, 1000);
-  updateCountdown();
-}
-// Load deadline from Firebase settings
-db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
-  const deadlineStr = snapshot.val();
-  if (deadlineStr) {
-    cutoffDate = new Date(deadlineStr); //deadline from firebase
-    window.startDate = new Date(cutoffDate); // Set startDate to 3 months after cutoffDate
-    window.startDate.setMonth(window.startDate.getMonth() + 3);
-    //const newDeadline = new Date(startDate);
-    //newDeadline.setDate(newDeadline.getDate()+30);
-    //window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 30); //new deadline is 30 days after startDate
-    window.endDate = new Date(window.startDate);
-    window.endDate.setDate(window.endDate.getDate() + 30);
+  // Load availability deadline and compute start/end dates
+  db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
+    const deadlineStr = snapshot.val();
+    if (deadlineStr) {
+      cutoffDate = new Date(deadlineStr);
+      window.startDate = new Date(cutoffDate);
+      window.startDate.setMonth(startDate.getMonth() + 3);
+      window.endDate = new Date(startDate);
+      window.endDate.setDate(endDate.getDate() + 30);
 
-    startCountdown();
-    generateGrid();
-    loadSummary();
-  } else {
-    countdownTimer.textContent = "No deadline set by admin yet.";
-  }
-});
-  
-  // Populate dropdown with existing users
-  function populateDropdownFromFirebase() {
-  db.ref('members').once('value').then(snapshot => {
-    const members = snapshot.val() || [];
-    userSelect.innerHTML = `
-      <option value="" disabled selected>Select your name</option>
-      ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
-    `;
+      startCountdown();
+      generateGrid();
+      loadSummary();
+    } else {
+      countdownTimer.textContent = "No deadline set by admin yet.";
+    }
   });
 
-    const savedName = localStorage.getItem('bookiesUser');
-if (savedName && userSelect.querySelector(`option[value="${savedName}"]`)) {
-  userSelect.value = savedName;
-  loadUserAvailability(savedName);
-}
-
-}
-
+  // Populate dropdown from Firebase members
+  function populateDropdownFromFirebase() {
+    db.ref('members').once('value').then(snapshot => {
+      const members = snapshot.val() || [];
+      userSelect.innerHTML = `
+        <option value="" disabled selected>Select your name</option>
+        ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
+      `;
+      const savedName = localStorage.getItem('bookiesUser');
+      if (savedName && userSelect.querySelector(`option[value="${savedName}"]`)) {
+        userSelect.value = savedName;
+        loadUserAvailability(savedName);
+      }
+    });
+  }
 
   function formatDate(d) {
     return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
+  // Create editable availability grid
   function generateGrid() {
     const gridDiv = document.getElementById('grid');
     gridDiv.innerHTML = '';
     const table = document.createElement('table');
-
-    // Header row with hours
     const header = document.createElement('tr');
     header.innerHTML = '<th>Date</th>' + hours.map(h => `<th>${h}:00</th>`).join('');
     table.appendChild(header);
 
-    // Create rows for each date
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const row = document.createElement('tr');
-      const displayDate = formatDate(new Date(d)); // new Date to avoid mutation issues
+      const displayDate = formatDate(new Date(d));
       const isoDate = d.toISOString().split('T')[0];
       row.innerHTML = `<td>${displayDate}</td>`;
-
       hours.forEach(hour => {
         const key = `${isoDate}_${hour}`;
         availability[key] = availability[key] || false;
-
         const td = document.createElement('td');
         td.className = availability[key] ? 'available' : '';
-
         td.onmousedown = () => {
           isMouseDown = true;
           toggleState = !availability[key];
           availability[key] = toggleState;
           td.className = toggleState ? 'available' : '';
         };
-
         td.onmouseover = () => {
           if (isMouseDown) {
             availability[key] = toggleState;
             td.className = toggleState ? 'available' : '';
           }
         };
-
-        td.onmouseup = () => {
-          isMouseDown = false;
-        };
-
+        td.onmouseup = () => { isMouseDown = false; };
         row.appendChild(td);
         cellMap[key] = td;
       });
-
       table.appendChild(row);
     }
-
     document.onmouseup = () => { isMouseDown = false; };
     gridDiv.appendChild(table);
   }
 
-  // Load all users who submitted availability and populate dropdown
-/*  function loadUsers() {
-    db.ref('responses').once('value').then(snapshot => {
+  // Load existing user availability
+  function loadUserAvailability(user) {
+    if (!user) return;
+    db.ref('responses/' + user).once('value').then(snapshot => {
       const data = snapshot.val() || {};
-      const users = Object.keys(data).sort();
-
-          userSelect.innerHTML = `
-      <option value="" disabled selected>Select your name</option>
-    `;
-
-      users.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user;
-        option.textContent = user;
-        userSelect.appendChild(option);
-      });
-
-      // Enable submit button only if user selected
-      //userSelect.disabled = users.length === 0;
-      submitBtn.disabled = true;
-    });
-  }*/
-
-  // Load availability for selected user and update grid
-function loadUserAvailability(user) {
-  if (!user) return;
-
-  db.ref('responses/' + user).once('value').then(snapshot => {
-    const data = snapshot.val() || {};
-    availability = {}; // reset local availability
-
-    for (const key in data) {
-      availability[key] = !!data[key];
-    }
-
-    for (const key in cellMap) {
-      if (availability[key]) {
-        cellMap[key].classList.add('available');
-      } else {
-        cellMap[key].classList.remove('available');
+      availability = {};
+      for (const key in data) availability[key] = !!data[key];
+      for (const key in cellMap) {
+        cellMap[key].classList.toggle('available', availability[key]);
       }
-    }
-
-    submitBtn.disabled = false;
-  });
-}
-
-
-  // Submit current availability for selected user
-function submitAvailability() {
-  let selected = userSelect.value;
-
-  if (!selected) {
-    alert('Please select your name');
-    return;
-  }
-  
-  if (new Date() > cutoffDate) {
-    alert('Sorry, submissions are now closed.');
-    return;
+      submitBtn.disabled = false;
+    });
   }
 
-  db.ref('responses/' + selected).set(availability).then(() => {
+  // Save submitted availability to Firebase
+  function submitAvailability() {
+    const selected = userSelect.value;
+    if (!selected) return alert('Please select your name');
+    if (new Date() > cutoffDate) return alert('Sorry, submissions are now closed.');
+    db.ref('responses/' + selected).set(availability).then(() => {
+      submitBtn.textContent = 'Re-submit';
+      loadSummary();
+    });
+    localStorage.setItem('bookiesUser', selected);
+  }
 
-                // Change submit button text to "Re-submit"
-      const submitBtn = document.getElementById('submitButton');
-      submitBtn.textContent = "Re-submit";
-
-    
-    //loadUsers();
-    loadSummary();
-    //userSelect.value = name;  // Set the dropdown to the new user
-
-  });
-
-  localStorage.setItem('bookiesUser', selected);
-
-}
-
-
-  // Load summary of all availability
+  // Load all users' availability and create heatmap summary
   function loadSummary() {
     db.ref('responses').once('value').then(snapshot => {
       const data = snapshot.val() || {};
-      const counts = {};
-      const whoSelected = {};
-      const userCount = Object.keys(data).length;
-
+      const counts = {}, whoSelected = {}, userCount = Object.keys(data).length;
       for (const user in data) {
-        const userAvail = data[user];
-        for (const key in userAvail) {
-          if (userAvail[key]) {
+        for (const key in data[user]) {
+          if (data[user][key]) {
             counts[key] = (counts[key] || 0) + 1;
-            if (!whoSelected[key]) whoSelected[key] = [];
-            whoSelected[key].push(user);
+            (whoSelected[key] ||= []).push(user);
           }
         }
       }
-
       const summaryDiv = document.getElementById('summary');
       summaryDiv.innerHTML = '';
-      if(userCount === 0) {
-        summaryDiv.textContent = 'No availability submissions yet.';
-        return;
-      }
-
+      if (userCount === 0) return summaryDiv.textContent = 'No availability submissions yet.';
       const table = document.createElement('table');
       const header = document.createElement('tr');
       header.innerHTML = '<th>Date</th>' + hours.map(h => `<th>${h}:00</th>`).join('');
@@ -368,77 +258,52 @@ function submitAvailability() {
         const displayDate = formatDate(new Date(d));
         const isoDate = d.toISOString().split('T')[0];
         row.innerHTML = `<td>${displayDate}</td>`;
-
         hours.forEach(hour => {
           const key = `${isoDate}_${hour}`;
           const count = counts[key] || 0;
-          const greenIntensity = Math.floor((count / userCount) * 200);
-          const color = `rgb(${255 - greenIntensity}, 255, ${255 - greenIntensity})`;
+          const green = Math.floor((count / userCount) * 200);
           const td = document.createElement('td');
-          td.style.backgroundColor = count ? color : '#fff';
-          td.textContent = count > 0 ? count : '';
-          if (whoSelected[key]) {
-            td.title = whoSelected[key].join(', ');
-          }
+          td.style.backgroundColor = count ? `rgb(${255 - green}, 255, ${255 - green})` : '#fff';
+          td.textContent = count || '';
+          if (whoSelected[key]) td.title = whoSelected[key].join(', ');
           row.appendChild(td);
         });
-
         table.appendChild(row);
       }
-
       highlightTopTimes(counts);
       summaryDiv.appendChild(table);
     });
   }
 
+  // Highlight top 3 most popular times
   function highlightTopTimes(counts) {
-    const entries = Object.entries(counts);
-    const sorted = entries.sort((a, b) => b[1] - a[1]).slice(0, 3);
-    const topKeys = new Set(sorted.map(e => e[0]));
-
-    const summaryRows = document.querySelectorAll('#summary table tr');
-
-    for (const row of summaryRows) {
+    const topKeys = new Set(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]));
+    const rows = document.querySelectorAll('#summary table tr');
+    for (const row of rows) {
       const cells = row.querySelectorAll('td');
       if (cells.length < 2) continue;
       const dateText = cells[0].textContent;
       const date = new Date(dateText + ", " + new Date().getFullYear());
       const isoDate = date.toISOString().split('T')[0];
-
       for (let i = 1; i < cells.length; i++) {
         const hour = hours[i - 1];
         const key = `${isoDate}_${hour}`;
-        if (topKeys.has(key)) {
-          cells[i].style.border = '3px solid #2c5f2d';
-        }
+        if (topKeys.has(key)) cells[i].style.border = '3px solid #2c5f2d';
       }
     }
   }
 
-  // Event listeners
+  // Event bindings
   userSelect.addEventListener('change', () => {
-      const val = userSelect.value;
-  if (val === '') {
-  submitBtn.disabled = true;
-  availability = {};
-  for (const key in cellMap) {
-    cellMap[key].classList.remove('available');
-  }
-  }else if (val) {
-    submitBtn.disabled = false;
-    loadUserAvailability(val);
-  } else {
-    submitBtn.disabled = true;
-  }
+    const val = userSelect.value;
+    submitBtn.disabled = !val;
+    availability = {};
+    Object.keys(cellMap).forEach(k => cellMap[k].classList.remove('available'));
+    if (val) loadUserAvailability(val);
   });
 
   submitBtn.addEventListener('click', submitAvailability);
-
-  //generateGrid();
-  //loadUsers();
-  //loadSummary();
-  
-populateDropdownFromFirebase();
+  populateDropdownFromFirebase();
 });
 </script>
 </body>
