@@ -164,8 +164,9 @@ db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
     window.startDate.setMonth(window.startDate.getMonth() + 3);
     //const newDeadline = new Date(startDate);
     //newDeadline.setDate(newDeadline.getDate()+30);
-    window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 30); //new deadline is 30 days after startDate
-
+    //window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 30); //new deadline is 30 days after startDate
+    window.endDate = new Date(window.startDate);
+    window.endDate.setDate(window.endDate.getDate() + 30);
 
     startCountdown();
     generateGrid();
