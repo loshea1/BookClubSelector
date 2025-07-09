@@ -322,6 +322,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   userSelect.addEventListener('change', () => {
     const val = userSelect.value;
+    submitBtn.textContect = "Submit";
     if (!val) {
       availability = {};
       for (const key in cellMap) cellMap[key].className = '';
