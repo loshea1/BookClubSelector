@@ -70,10 +70,33 @@ nav a:hover {
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    const countdownEl = document.getElementById('countdownTimer');
-
-    function startCountdown(deadlineISO) {
+    const hours = [17, 18, 19, 20, 21, 22];
+    
+    //const countdownEl = document.getElementById('countdownTimer');
+    const countdownTimer = document.getElementById('countdownTimer');
+    let timerInterval = null;
+    let cutoffDate = null;
+    
+    function startCountdown() {
+    if (!cutoffDate) return;
+    function updateCountdown() {
+      const now = new Date();
+      const diff = cutoffDate - now;
+      if (diff <= 0) {
+        countdownTimer.textContent = "Submissions are now closed.";
+        clearInterval(timerInterval);
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      countdownTimer.textContent = `Deadline in ${days}d ${hrs}h ${mins}m ${secs}s`;
+    }
+    timerInterval = setInterval(updateCountdown, 1000);
+    updateCountdown();
+  }
+    /*function startCountdown(deadlineISO) {
       const deadline = new Date(deadlineISO);
       function updateCountdown() {
         const now = new Date();
@@ -91,7 +114,7 @@ nav a:hover {
       }
       updateCountdown();
       setInterval(updateCountdown, 1000);
-    }
+    }*/
 db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
   const deadlineISO = snapshot.val();
   const deadline = new Date(deadlineISO);
