@@ -147,7 +147,7 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
       }
     });
   }else {
-    startCountdown(deadlineISO);  // ✅ show countdown if before deadline
+    startCountdown();  // ✅ show countdown if before deadline
   }
 });
 
