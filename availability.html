@@ -90,7 +90,16 @@
 
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-  const firebaseConfig = { /* Firebase config */ };
+  const firebaseConfig = {
+        apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
+        authDomain: "bookies-availability.firebaseapp.com",
+        databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
+        projectId: "bookies-availability",
+        storageBucket: "bookies-availability.appspot.com",
+        messagingSenderId: "429713911832",
+        appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
+      };
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const hours = [17, 18, 19, 20, 21, 22];
