@@ -159,13 +159,12 @@ if (!cutoffDate) return;
 db.ref('settings/availabilityDeadline').once('value').then(snapshot => {
   const deadlineStr = snapshot.val();
   if (deadlineStr) {
-    cutoffDate = new Date(deadlineStr);
-    
-    // Set startDate to 3 months after cutoffDate
-    window.startDate = new Date(cutoffDate);
+    cutoffDate = new Date(deadlineStr); //deadline from firebase
+    window.startDate = new Date(cutoffDate); // Set startDate to 3 months after cutoffDate
     window.startDate.setMonth(window.startDate.getMonth() + 3);
-    //startDate.setDate(1);
-    window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 0);
+    const newDeadline = new Date(startDate);
+    newDeadline.setDate(newDeadline.getDate()+30);
+    window.endDate = new Date(window.startDate.getFullYear(), window.startDate.getMonth() + 1, 0); //new deadline is 30 days after startDate
 
 
     startCountdown();
