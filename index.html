@@ -167,6 +167,12 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
     }
 
 window.submitEntry = () => {
+    const now = new Date();
+  if (now > cutoffDate) {
+    document.getElementById('message').textContent = '⛔ Submissions are closed.';
+    return;
+  }
+  
   let name = document.getElementById('name').value.trim().toLowerCase();
   const title = document.getElementById('title').value.trim();
   const author = document.getElementById('author').value.trim();
