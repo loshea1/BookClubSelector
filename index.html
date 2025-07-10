@@ -121,41 +121,15 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
   startCountdown();
   //const deadline = new Date(deadlineISO);
   const now = new Date();
-if (now > cutoffDate) {
-  document.getElementById('formSection').style.display = 'none';
-  db.ref('selectedBook').once('value').then(bookSnap => {
-    const selected = bookSnap.val();
-    if (selected) {
-      showSelectedBook(selected);
-    } else {
-      db.ref('submissions').once('value').then(subSnap => {
-        const submissions = subSnap.val();
-        const names = Object.keys(submissions);
-        if (names.length === 0) return;
-
-        const randomName = names[Math.floor(Math.random() * names.length)];
-        const selected = {
-          ...submissions[randomName],
-          submitter: randomName,
-          date: now.toLocaleDateString()
-        };
-
-        db.ref('selectedBook').set(selected);
-        db.ref('history').set(selected);
-        showSelectedBook(selected);
-      });
-    }
-  });
-} else {
-  startCountdown();
-}
-/*  if (now > deadline) {
+  
+  if (now > cutoffDate) {
     // Deadline passed — check if book already selected
+    document.getElementById('formSection').style.display = 'none';
     db.ref('selectedBook').once('value').then(bookSnap => {
       const selected = bookSnap.val();
 
       if (selected) {
-        displaySelectedBook(selected);
+        showSelectedBook(selected);
       } else {
         db.ref('submissions').once('value').then(subSnap => {
           const submissions = subSnap.val();
@@ -171,7 +145,7 @@ if (now > cutoffDate) {
 
           db.ref('selectedBook').set(selected);
           db.ref('history').set(selected);
-          showRandomWinner(selected);
+          showSelectedBook(selected);
         });
       }
     });
@@ -179,7 +153,6 @@ if (now > cutoffDate) {
     startCountdown();  // ✅ show countdown if before deadline
   }
 });
-*/
     function loadSubmissions() {
       db.ref('submissions').once('value').then(snapshot => {
         const data = snapshot.val() || {};
