@@ -92,8 +92,6 @@ if (diff <= 0) {
   }
   return;
 }
-
-
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
     const mins = Math.floor((diff / (1000 * 60)) % 60);
@@ -116,6 +114,9 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
   startCountdown();  // only call here if still before deadline
 } else {
     // Deadline passed — check if book already selected
+      countdownTimer.textContent = "⛔ Submissions are now closed.";
+  document.getElementById('formSection').style.display = 'none';
+  localStorage.removeItem("submissionClosedReloaded"); // reset for next round
     document.getElementById('formSection').style.display = 'none';
     db.ref('selectedBook').once('value').then(bookSnap => {
       const selected = bookSnap.val();
@@ -158,10 +159,6 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
 
 window.submitEntry = () => {
     const now = new Date();
-  /*if (now > cutoffDate) {
-    document.getElementById('message').textContent = '⛔ Submissions are closed.';
-    return;
-  }*/
   
   let name = document.getElementById('name').value.trim().toLowerCase();
   const title = document.getElementById('title').value.trim();
@@ -205,36 +202,15 @@ function showSelectedBook(book) {
   msg.style.color = '#2c5f2d';
   msg.textContent = `🎉 Next book is "${book.title}" by ${book.author} (submitted by ${book.submitter})!`;
   document.body.appendChild(msg);
-}
 
-function showRandomWinner(book) {
-  db.ref('submissions').once('value').then(snapshot => {
-    const data = snapshot.val();
-    if (data && Object.keys(data).length > 0) {
-      const names = Object.keys(data);
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const book = data[randomName];
-
-      // Display winner
-      const winnerMsg = document.createElement('p');
-      winnerMsg.style.fontSize = '1.2em';
-      winnerMsg.style.fontWeight = 'bold';
-      winnerMsg.style.color = '#2c5f2d';
-      winnerMsg.textContent = `🎉 Next book is "${book.title}" by ${book.author}!`;
-      document.body.appendChild(winnerMsg);
-
-      // Save as a single object instead of pushing multiple
+    // Save as a single object instead of pushing multiple
 db.ref('history').set({
   title: selectedBook.title,
   author: selectedBook.author,
   submitter: selectedName,
   date: new Date().toLocaleDateString()
 });
-
-    }
-  });
 }
-
 
   });
 
