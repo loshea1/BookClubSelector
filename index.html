@@ -66,7 +66,9 @@
 
   <!-- Submission Form -->
   <div id="formSection">
-    <input id="name" placeholder="Your Name"/><br/>
+    <select id="name">
+      <option value="" disabled selected>Select your name</option>
+    </select><br/>
     <input id="title" placeholder="Book Title"/><br/>
     <input id="author" placeholder="Author"/><br/>
     <button onclick="submitEntry()">Submit</button>
@@ -188,6 +190,17 @@
           });
         });
       }
+
+      function populateNameDropdown() {
+        db.ref('members').once('value').then(snapshot => {
+          const members = snapshot.val() || [];
+          const nameSelect = document.getElementById('name');
+          nameSelect.innerHTML = `<option value="" disabled selected>Select your name</option>` +
+            members.map(name => `<option value="${name}">${name}</option>`).join('');
+        });
+      }
+      
+      populateNameDropdown();
 
       // Handle submission
       window.submitEntry = () => {
