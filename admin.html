@@ -3,21 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <title>Bookies Admin</title>
+
+  <!-- Firebase SDK -->
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 2em; background: #f4f4f4; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2em;
+      background: #f4f4f4;
+    }
+
     h1 { color: #2c5f2d; }
     ul { list-style: none; padding: 0; }
     li { padding: 5px; }
-    input, button { padding: 8px; margin: 10px; }
-    button { background-color: #2c5f2d; color: white; border: none; cursor: pointer; }
-    .delete-btn { color: red; cursor: pointer; margin-left: 10px; }
-    nav a { margin: 0 10px; text-decoration: none; color: #2c5f2d; font-weight: bold; }
-    nav a:hover { text-decoration: underline; }
+
+    input, button {
+      padding: 8px;
+      margin: 10px;
+    }
+
+    button {
+      background-color: #2c5f2d;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      color: red;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #2c5f2d;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    #availabilityDisplay, #membersDisplayBox {
+      margin-top: 1em;
+      max-height: 400px;
+      overflow-y: auto;
+      text-align: left;
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
+
 <body>
+  <!-- Navigation -->
   <nav style="margin-bottom: 2em;">
     <a href="index.html">🏠 Submit</a> |
     <a href="history.html">📚 History</a> |
@@ -26,19 +71,20 @@
   </nav>
 
   <h1>Bookies Admin Panel</h1>
-<h2>Availability Responses</h2>
-<button onclick="resetAvailability()">🗑️ Reset All Availability Responses</button>
-<div id="availabilityDisplay" style="margin-top:1em; max-height:400px; overflow-y:auto; text-align:left; background:#fff; padding:10px; border:1px solid #ccc;"></div>
 
-<h2>Members</h2>
-<table id="memberTable" style="margin: auto;">
-  <tbody></tbody>
-</table>
-<input type="text" id="newMember" placeholder="Add member">
-<button onclick="addMember()">Add</button>
-<div id="membersDisplayBox" style="margin-top:1em; max-height:400px; overflow-y:auto; text-align:left; background:#fff; padding:10px; border:1px solid #ccc;"></div>
+  <!-- Availability Section -->
+  <h2>Availability Responses</h2>
+  <button onclick="resetAvailability()">🗑️ Reset All Availability Responses</button>
+  <div id="availabilityDisplay"></div>
 
+  <!-- Member Management Section -->
+  <h2>Members</h2>
+  <table id="memberTable" style="margin: auto;"><tbody></tbody></table>
+  <input type="text" id="newMember" placeholder="Add member">
+  <button onclick="addMember()">Add</button>
+  <div id="membersDisplayBox"></div>
 
+  <!-- Deadline Management Section -->
   <h2>Submission Deadlines</h2>
   <div>
     <label>Book Submission Deadline:</label>
@@ -50,13 +96,10 @@
     <input type="datetime-local" id="availabilityDeadline">
     <button onclick="updateDeadline('availabilityDeadline')">Save</button>
   </div>
-  
-  <table id="memberTable" style="margin: auto;">
-  <tbody></tbody>
-</table>
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {
+      // Firebase config
       const firebaseConfig = {
         apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
         authDomain: "bookies-availability.firebaseapp.com",
@@ -67,59 +110,46 @@
         appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
       };
 
+      // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
-      
-      const PASSWORD = "bookies123"; // change this to your actual password
-      const entered = localStorage.getItem("adminAccess");
-      
-      if (entered !== PASSWORD) {
-    const input = prompt("Enter admin password:");
-    if (input !== PASSWORD) {
-      alert("Access denied.");
-      window.location.href = "index.html"; // redirect to another page
-    } else {
-      localStorage.setItem("adminAccess", input);
-    }
-  }
 
-
-      const memberList = document.getElementById('memberList');
       const bookDeadlineInput = document.getElementById('bookDeadline');
       const availabilityDeadlineInput = document.getElementById('availabilityDeadline');
 
-    // Load and render members from Firebase
+      // Load and render members from Firebase
       function loadMembers() {
-  db.ref('members').once('value').then(snapshot => {
-    const members = snapshot.val() || [];
-    const memberTable = document.getElementById('memberTable').querySelector('tbody');
-    memberTable.innerHTML = '';
+        db.ref('members').once('value').then(snapshot => {
+          const members = snapshot.val() || [];
+          const table = document.querySelector('#memberTable tbody');
+          table.innerHTML = '';
 
-    for (let i = 0; i < members.length; i += 2) {
-      const row = document.createElement('tr');
+          for (let i = 0; i < members.length; i += 2) {
+            const row = document.createElement('tr');
 
-      for (let j = 0; j < 2; j++) {
-        const idx = i + j;
-        const name = members[idx];
-        const cell = document.createElement('td');
+            for (let j = 0; j < 2; j++) {
+              const idx = i + j;
+              const name = members[idx];
+              const cell = document.createElement('td');
 
-        if (name) {
-          cell.textContent = name;
-          const x = document.createElement('span');
-          x.textContent = ' ✖';
-          x.className = 'delete-btn';
-          x.onclick = () => deleteMember(idx);
-          cell.appendChild(x);
-        }
+              if (name) {
+                cell.textContent = name;
+                const x = document.createElement('span');
+                x.textContent = ' ✖';
+                x.className = 'delete-btn';
+                x.onclick = () => deleteMember(idx);
+                cell.appendChild(x);
+              }
 
-        row.appendChild(cell);
+              row.appendChild(cell);
+            }
+
+            table.appendChild(row);
+          }
+        });
       }
 
-      memberTable.appendChild(row);
-    }
-  });
-}
-
+      // Load deadlines from Firebase
       function loadDeadlines() {
         db.ref('settings').once('value').then(snapshot => {
           const settings = snapshot.val() || {};
@@ -130,75 +160,80 @@
         });
       }
 
+      // Format ISO date for input
       function formatForInput(isoString) {
         const dt = new Date(isoString);
         const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
-        return local.toISOString().slice(0,16);
+        return local.toISOString().slice(0, 16);
       }
 
+      // Add new member
+      window.addMember = () => {
+        const input = document.getElementById('newMember');
+        const name = input.value.trim();
+        if (!name) return alert('Enter a name');
 
-    // Add a new member
-    window.addMember = () => {
-      const input = document.getElementById('newMember');
-      const name = input.value.trim();
-      if (!name) return alert('Enter a name');
-
-      db.ref('members').once('value').then(snapshot => {
-        const members = snapshot.val() || [];
-        if (members.includes(name)) {
-          alert('Member already exists');
-          return;
-        }
-        members.push(name);
-        db.ref('members').set(members).then(() => {
-          input.value = '';
-          loadMembers();
+        db.ref('members').once('value').then(snapshot => {
+          const members = snapshot.val() || [];
+          if (members.includes(name)) {
+            alert('Member already exists');
+            return;
+          }
+          members.push(name);
+          db.ref('members').set(members).then(() => {
+            input.value = '';
+            loadMembers();
+          });
         });
-      });
-    };
+      };
 
-          // Delete a member by index
-    function deleteMember(index) {
-      if (!confirm('Remove this member?')) return;
-      db.ref('members').once('value').then(snapshot => {
-        const members = snapshot.val() || [];
-        members.splice(index, 1);
-        db.ref('members').set(members).then(loadMembers);
-      });
-    }
-            window.updateDeadline = (key) => {
-  const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
-  const date = input.value;
-  if (!date) return alert('Pick a date/time first');
-  const isoDate = new Date(date).toISOString();
-
-  db.ref('settings/' + key).set(isoDate).then(() => {
-    if (key === 'bookSubmissionDeadline') {
-      db.ref('selectedBook').remove();
-
-      const confirmed = confirm("Do you want to clear the previous book submissions?");
-      if (confirmed) {
-        db.ref('submissions').remove().then(() => {
-          alert("✅ Submissions cleared.");
+      // Delete member by index
+      function deleteMember(index) {
+        if (!confirm('Remove this member?')) return;
+        db.ref('members').once('value').then(snapshot => {
+          const members = snapshot.val() || [];
+          members.splice(index, 1);
+          db.ref('members').set(members).then(loadMembers);
         });
       }
-    }
-     alert('Deadline updated!');
-  });
-};
 
-window.resetAvailability = function() {
-  if (!confirm('Are you sure you want to delete all availability responses? This cannot be undone.')) return;
+      // Update deadline (book or availability)
+      window.updateDeadline = (key) => {
+        const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
+        const date = input.value;
+        if (!date) return alert('Pick a date/time first');
+        const isoDate = new Date(date).toISOString();
 
-  db.ref('responses').remove()
-    .then(() => {
-      alert('All availability responses have been reset.');
-      document.getElementById('availabilityDisplay').textContent = '';
-    })
-    .catch(error => {
-      alert('Failed to reset availability responses: ' + error.message);
-    });
-}
+        db.ref('settings/' + key).set(isoDate).then(() => {
+          if (key === 'bookSubmissionDeadline') {
+            db.ref('selectedBook').remove();
+
+            const confirmed = confirm("Do you want to clear the previous book submissions?");
+            if (confirmed) {
+              db.ref('submissions').remove().then(() => {
+                alert("✅ Submissions cleared.");
+              });
+            }
+          }
+          alert('Deadline updated!');
+        });
+      };
+
+      // Reset all availability responses
+      window.resetAvailability = () => {
+        if (!confirm('Are you sure you want to delete all availability responses? This cannot be undone.')) return;
+
+        db.ref('responses').remove()
+          .then(() => {
+            alert('All availability responses have been reset.');
+            document.getElementById('availabilityDisplay').textContent = '';
+          })
+          .catch(error => {
+            alert('Failed to reset availability responses: ' + error.message);
+          });
+      };
+
+      // Initial load
       loadMembers();
       loadDeadlines();
     });
