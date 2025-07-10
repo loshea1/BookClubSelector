@@ -154,7 +154,37 @@
         db.ref('members').set(members).then(loadMembers);
       });
     }
+            window.updateDeadline = (key) => {
+        const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
+        const date = input.value;
+        if (!date) return alert('Pick a date/time first');
+        const isoDate = new Date(date).toISOString();
 
+        db.ref('settings/' + key).set(isoDate).then(() => {
+          alert('Deadline updated!');
+          // If book submission deadline was updated, clear selectedBook to reset selection
+          if (key === 'bookSubmissionDeadline') {
+            db.ref('selectedBook').remove();
+            // Optionally clear history? Or you might keep it.
+            document.getElementById("saveDeadlineBtn").onclick = () => {
+  const newDeadline = document.getElementById("deadlineInput").value;
+  if (!newDeadline) return alert("Enter a valid date/time.");
+
+  firebase.database().ref('settings/bookSubmissionDeadline').set(newDeadline).then(() => {
+    alert("🗓️ Deadline updated.");
+    const confirmed = confirm("Do you want to clear the previous book submissions?");
+    if (confirmed) {
+      firebase.database().ref('submissions').remove().then(() => {
+        alert("✅ Submissions cleared.");
+      });
+    }
+  });
+};
+          }
+        });
+
+      };
+/*
       window.updateDeadline = (key) => {
         const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
         const date = input.value;
@@ -199,6 +229,7 @@
         });
 
       };
+      */
 window.resetAvailability = function() {
   if (!confirm('Are you sure you want to delete all availability responses? This cannot be undone.')) return;
 
