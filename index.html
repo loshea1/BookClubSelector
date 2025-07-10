@@ -160,7 +160,7 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
 window.submitEntry = () => {
     const now = new Date();
   
-  let name = document.getElementById('name').value.trim().toLowerCase();
+  let name = document.getElementById('name').value.trim();
   const title = document.getElementById('title').value.trim();
   const author = document.getElementById('author').value.trim();
   const msg = document.getElementById('message');
