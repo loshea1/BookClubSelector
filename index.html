@@ -137,7 +137,7 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
           };
 
           db.ref('selectedBook').set(selected);
-          db.ref('history').set(selected);
+          db.ref('history').push(selected);
           showSelectedBook(selected);
         });
       }
@@ -204,7 +204,7 @@ function showSelectedBook(book) {
   document.body.appendChild(msg);
 
     // Save as a single object instead of pushing multiple
-db.ref('history').set({
+db.ref('history').push({
   title: selectedBook.title,
   author: selectedBook.author,
   submitter: selectedName,
