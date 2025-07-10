@@ -75,13 +75,15 @@ nav a:hover {
     //const countdownEl = document.getElementById('countdownTimer');
     const countdownTimer = document.getElementById('countdownTimer');
     let timerInterval = null;
+    let hasReloaded = false;
     
     function startCountdown() {
     if (!cutoffDate) return;
     function updateCountdown() {
       const now = new Date();
       const diff = cutoffDate - now;
-      if (diff <= 0) {
+      if (diff <= 0 && !hasReloaded) {
+        hasReloaded = true;
         countdownTimer.textContent = "⛔ Submissions are now closed.";
         clearInterval(timerInterval);
         location.reload();
