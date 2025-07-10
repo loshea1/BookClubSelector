@@ -168,6 +168,34 @@
           if (key === 'bookSubmissionDeadline') {
             db.ref('selectedBook').remove();
             // Optionally clear history? Or you might keep it.
+            window.updateDeadline = (key) => {
+  const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
+  const date = input.value;
+  if (!date) return alert('Pick a date/time first');
+
+  const isoDate = new Date(date).toISOString();
+
+  db.ref('settings/' + key).once('value').then(snapshot => {
+    const previous = snapshot.val();
+    const isNew = previous !== isoDate;
+
+    db.ref('settings/' + key).set(isoDate).then(() => {
+      alert('✅ Deadline updated!');
+
+      if (key === 'bookSubmissionDeadline') {
+        db.ref('selectedBook').remove();  // Reset selection
+
+        if (isNew) {
+          const confirmed = confirm("🧹 Clear all previous book submissions?");
+          if (confirmed) {
+            db.ref('submissions').remove().then(() => {
+              alert("🗑️ Submissions cleared.");
+            });
+          }
+        }
+      }
+    });
+  });
           }
         });
 
