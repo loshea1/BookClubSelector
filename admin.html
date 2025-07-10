@@ -55,9 +55,7 @@
   <tbody></tbody>
 </table>
 
-
   <script>
-    
     window.addEventListener('DOMContentLoaded', () => {
       const firebaseConfig = {
         apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
@@ -71,6 +69,20 @@
 
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
+      
+      const PASSWORD = "bookies123"; // change this to your actual password
+      const entered = localStorage.getItem("adminAccess");
+      
+      if (entered !== PASSWORD) {
+    const input = prompt("Enter admin password:");
+    if (input !== PASSWORD) {
+      alert("Access denied.");
+      window.location.href = "index.html"; // redirect to another page
+    } else {
+      localStorage.setItem("adminAccess", input);
+    }
+  }
+
 
       const memberList = document.getElementById('memberList');
       const bookDeadlineInput = document.getElementById('bookDeadline');
@@ -161,8 +173,6 @@
   const isoDate = new Date(date).toISOString();
 
   db.ref('settings/' + key).set(isoDate).then(() => {
-    
-
     if (key === 'bookSubmissionDeadline') {
       db.ref('selectedBook').remove();
 
@@ -172,8 +182,8 @@
           alert("✅ Submissions cleared.");
         });
       }
-      alert('Deadline updated!');
     }
+     alert('Deadline updated!');
   });
 };
 
@@ -189,7 +199,6 @@ window.resetAvailability = function() {
       alert('Failed to reset availability responses: ' + error.message);
     });
 }
-
       loadMembers();
       loadDeadlines();
     });
