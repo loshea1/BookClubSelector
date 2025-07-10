@@ -68,19 +68,21 @@ nav a:hover {
 
       function loadHistory() {
 db.ref('history').once('value').then(snapshot => {
-  const entry = snapshot.val();
+  const entries = snapshot.val();
   tableBody.innerHTML = '';
 
-  if (entry) {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${entry.title}</td>
-      <td>${entry.author}</td>
-      <td>${entry.submitter}</td>
-      <td>${entry.date || ''}</td>
-      <td>${isAdmin() ? `<span class="delete-btn" onclick="deleteEntry()">&#x2716;</span>` : ''}</td>
-    `;
-    tableBody.appendChild(row);
+  if (entries) {
+    Object.entries(entries).forEach(([key, entry]) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${entry.title}</td>
+        <td>${entry.author}</td>
+        <td>${entry.submitter}</td>
+        <td>${entry.date || ''}</td>
+        <td>${isAdmin() ? `<span class="delete-btn" onclick="deleteEntry('${key}')">&#x2716;</span>` : ''}</td>
+      `;
+      tableBody.appendChild(row);
+    });
   }
 });
 
