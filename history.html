@@ -49,51 +49,50 @@ nav a:hover {
     <tbody></tbody>
   </table>
 
-  <script defer>
-    window.addEventListener('DOMContentLoaded', () => {
-      const firebaseConfig = {
-        apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
-        authDomain: "bookies-availability.firebaseapp.com",
-        databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
-        projectId: "bookies-availability",
-        storageBucket: "bookies-availability.appspot.com",
-        messagingSenderId: "429713911832",
-        appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
-      };
+<script defer>
+  window.addEventListener('DOMContentLoaded', () => {
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
+      authDomain: "bookies-availability.firebaseapp.com",
+      databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
+      projectId: "bookies-availability",
+      storageBucket: "bookies-availability.appspot.com",
+      messagingSenderId: "429713911832",
+      appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
+    };
 
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const tableBody = document.querySelector('#historyTable tbody');
 
-      const tableBody = document.querySelector('#historyTable tbody');
+    function loadHistory() {
+      db.ref('history').once('value').then(snapshot => {
+        const entries = snapshot.val();
+        tableBody.innerHTML = '';
 
-      function loadHistory() {
-db.ref('history').once('value').then(snapshot => {
-  const entries = snapshot.val();
-  tableBody.innerHTML = '';
-
-  if (entries) {
-    Object.entries(entries).forEach(([key, entry]) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${entry.title}</td>
-        <td>${entry.author}</td>
-        <td>${entry.submitter}</td>
-        <td>${entry.date || ''}</td>
-      `;
-      tableBody.appendChild(row);
-    });
-  }
-});
-
-      }
-//DELETE AFTER WEBSITE IS LIVE----------------------------------------
-      window.deleteEntry = (key) => {
-          db.ref('history/' + key).remove().then(loadHistory);
+        if (entries) {
+          Object.entries(entries).forEach(([key, entry]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${entry.title || ''}</td>
+              <td>${entry.author || ''}</td>
+              <td>${entry.submitter || ''}</td>
+              <td>${entry.date || ''}</td>
+              <td><span class="delete-btn" onclick="deleteEntry('${key}')">&#x2716;</span></td>
+            `;
+            tableBody.appendChild(row);
+          });
         }
-      };
-//----------------------------------------------------------------------
-      loadHistory();
-    });
-  </script>
+      });
+    }
+
+    // DELETE FUNCTION (for admin only)
+    window.deleteEntry = (key) => {
+      db.ref('history/' + key).remove().then(loadHistory);
+    };
+
+    loadHistory();
+  });
+</script>
 </body>
 </html>
