@@ -57,6 +57,7 @@ nav a:hover {
   </table>
 
 <script defer>
+  let cutoffDate = null;
   window.addEventListener('DOMContentLoaded', () => {
     const firebaseConfig = {
       apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
@@ -72,10 +73,9 @@ nav a:hover {
     const db = firebase.database();
     const hours = [17, 18, 19, 20, 21, 22];
     
-    //const countdownEl = document.getElementById('countdownTimer');
     const countdownTimer = document.getElementById('countdownTimer');
     let timerInterval = null;
-    let hasReloaded = false;
+    
     function startCountdown() {
   if (!cutoffDate) return;
 
@@ -83,18 +83,16 @@ nav a:hover {
     const now = new Date();
     const diff = cutoffDate - now;
 
-    if (diff <= 0) {
-      clearInterval(timerInterval);
-      countdownTimer.textContent = "⛔ Submissions are now closed.";
+if (diff <= 0) {
+  clearInterval(timerInterval);
+  countdownTimer.textContent = "⛔ Submissions are now closed.";
+  if (!localStorage.getItem("submissionClosedReloaded")) {
+    localStorage.setItem("submissionClosedReloaded", "true");
+    location.reload();
+  }
+  return;
+}
 
-      // Only reload once by checking localStorage
-      if (!localStorage.getItem("submissionClosedReloaded")) {
-        localStorage.setItem("submissionClosedReloaded", "true");
-        location.reload();
-      }
-
-      return;
-    }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
@@ -107,56 +105,16 @@ nav a:hover {
   updateCountdown();
 }
 
-/*    function startCountdown() {
-    if (!cutoffDate) return;
-    function updateCountdown() {
-      const now = new Date();
-      const diff = cutoffDate - now;
-      if (diff <= 0 && !hasReloaded) {
-        hasReloaded = true;
-        countdownTimer.textContent = "⛔ Submissions are now closed.";
-        clearInterval(timerInterval);
-        location.reload();
-        return;
-      }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const mins = Math.floor((diff / (1000 * 60)) % 60);
-      const secs = Math.floor((diff / 1000) % 60);
-      countdownTimer.textContent = `⏳ Time left to submit: ${days}d ${hrs}h ${mins}m ${secs}s`;
-    }
-    timerInterval = setInterval(updateCountdown, 1000);
-    updateCountdown();
-  }*/
-    /*function startCountdown(deadlineISO) {
-      const deadline = new Date(deadlineISO);
-      function updateCountdown() {
-        const now = new Date();
-        const diff = deadline - now;
-        if (diff <= 0) {
-          countdownEl.textContent = "⛔ Submission deadline has passed.";
-          document.getElementById('formSection').style.display = 'none';
-          return;
-        }
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const m = Math.floor((diff / (1000 * 60)) % 60);
-        const s = Math.floor((diff / 1000) % 60);
-        countdownEl.textContent = `⏳ Time left to submit: ${d}d ${h}h ${m}m ${s}s`;
-      }
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
-    }*/
+
 db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
   const deadlineISO = snapshot.val();
-  
-    cutoffDate = new Date(deadlineISO);
-  hasReloaded = false;
-  startCountdown();
-  //const deadline = new Date(deadlineISO);
+  cutoffDate = new Date(deadlineISO);
   const now = new Date();
   
-  if (now > cutoffDate) {
+  if (now < cutoffDate) {
+  localStorage.removeItem("submissionClosedReloaded");
+  startCountdown();  // only call here if still before deadline
+} else {
     // Deadline passed — check if book already selected
     document.getElementById('formSection').style.display = 'none';
     db.ref('selectedBook').once('value').then(bookSnap => {
@@ -183,8 +141,6 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
         });
       }
     });
-  }else {
-    startCountdown();  // ✅ show countdown if before deadline
   }
 });
     function loadSubmissions() {
@@ -202,10 +158,10 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
 
 window.submitEntry = () => {
     const now = new Date();
-  if (now > cutoffDate) {
+  /*if (now > cutoffDate) {
     document.getElementById('message').textContent = '⛔ Submissions are closed.';
     return;
-  }
+  }*/
   
   let name = document.getElementById('name').value.trim().toLowerCase();
   const title = document.getElementById('title').value.trim();
