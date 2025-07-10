@@ -121,6 +121,7 @@ db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
   const deadlineISO = snapshot.val();
   
     cutoffDate = new Date(deadlineISO);
+  hasReloaded = false;
   startCountdown();
   //const deadline = new Date(deadlineISO);
   const now = new Date();
