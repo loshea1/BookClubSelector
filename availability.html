@@ -128,7 +128,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const now = new Date();
       const diff = cutoffDate - now;
       if (diff <= 0) {
-        countdownTimer.textContent = "Submissions are now closed.";
+        countdownTimer.textContent = "⛔ Submissions are now closed.";
         clearInterval(timerInterval);
         return;
       }
