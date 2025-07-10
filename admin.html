@@ -155,6 +155,27 @@
       });
     }
             window.updateDeadline = (key) => {
+  const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
+  const date = input.value;
+  if (!date) return alert('Pick a date/time first');
+  const isoDate = new Date(date).toISOString();
+
+  db.ref('settings/' + key).set(isoDate).then(() => {
+    alert('Deadline updated!');
+
+    if (key === 'bookSubmissionDeadline') {
+      db.ref('selectedBook').remove();
+
+      const confirmed = confirm("Do you want to clear the previous book submissions?");
+      if (confirmed) {
+        db.ref('submissions').remove().then(() => {
+          alert("✅ Submissions cleared.");
+        });
+      }
+    }
+  });
+};
+/*window.updateDeadline = (key) => {
         const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
         const date = input.value;
         if (!date) return alert('Pick a date/time first');
@@ -183,7 +204,7 @@
           }
         });
 
-      };
+      };*/
 /*
       window.updateDeadline = (key) => {
         const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
