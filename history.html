@@ -3,38 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <title>Bookies Book History</title>
+
+  <!-- Firebase SDK -->
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 2em; background: #f4f4f4; }
-    h1 { color: #2c5f2d; }
-    table { border-collapse: collapse; margin: 2em auto; background: white; }
-    th, td { border: 1px solid #ccc; padding: 10px; }
-    th { background-color: #2c5f2d; color: white; }
-    td { text-align: left; }
-    .delete-btn { color: red; cursor: pointer; }
 
-      nav a {
-  margin: 0 10px;
-  text-decoration: none;
-  color: #2c5f2d;
-  font-weight: bold;
-}
-nav a:hover {
-  text-decoration: underline;
-}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2em;
+      background: #f4f4f4;
+    }
+
+    h1 { color: #2c5f2d; }
+
+    table {
+      border-collapse: collapse;
+      margin: 2em auto;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #2c5f2d;
+      color: white;
+    }
+
+    td { text-align: left; }
+
+    .delete-btn {
+      color: red;
+      cursor: pointer;
+    }
+
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #2c5f2d;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
+
 <body>
-
+  <!-- Navigation -->
   <nav style="margin-bottom: 2em;">
-  <a href="index.html">🏠 Submit</a> |
-  <a href="history.html">📚 History</a> |
-  <a href="availability.html">📆 Availability</a> |
-  <a href="admin.html">🛠️ Admin</a>
-</nav>
+    <a href="index.html">🏠 Submit</a> |
+    <a href="history.html">📚 History</a> |
+    <a href="availability.html">📆 Availability</a> |
+    <a href="admin.html">🛠️ Admin</a>
+  </nav>
 
-
+  <!-- Book History Table -->
   <h1>Past Book Selections</h1>
   <table id="historyTable">
     <thead>
@@ -49,50 +78,56 @@ nav a:hover {
     <tbody></tbody>
   </table>
 
-<script defer>
-  window.addEventListener('DOMContentLoaded', () => {
-    const firebaseConfig = {
-      apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
-      authDomain: "bookies-availability.firebaseapp.com",
-      databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
-      projectId: "bookies-availability",
-      storageBucket: "bookies-availability.appspot.com",
-      messagingSenderId: "429713911832",
-      appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
-    };
+  <script defer>
+    window.addEventListener('DOMContentLoaded', () => {
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
+        authDomain: "bookies-availability.firebaseapp.com",
+        databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
+        projectId: "bookies-availability",
+        storageBucket: "bookies-availability.appspot.com",
+        messagingSenderId: "429713911832",
+        appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
+      };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const tableBody = document.querySelector('#historyTable tbody');
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const tableBody = document.querySelector('#historyTable tbody');
 
-    function loadHistory() {
-      db.ref('history').once('value').then(snapshot => {
-        const entries = snapshot.val();
-        tableBody.innerHTML = '';
+      // Load history from Firebase and render into table
+      function loadHistory() {
+        db.ref('history').once('value').then(snapshot => {
+          const entries = snapshot.val();
+          tableBody.innerHTML = '';
 
-        if (entries) {
-          Object.entries(entries).forEach(([key, entry]) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${entry.title || ''}</td>
-              <td>${entry.author || ''}</td>
-              <td>${entry.submitter || ''}</td>
-              <td>${entry.date || ''}</td>
-              <td><span class="delete-btn" onclick="deleteEntry('${key}')">&#x2716;</span></td>
-            `;
-            tableBody.appendChild(row);
-          });
+          if (entries) {
+            Object.entries(entries).forEach(([key, entry]) => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${entry.title || ''}</td>
+                <td>${entry.author || ''}</td>
+                <td>${entry.submitter || ''}</td>
+                <td>${entry.date || ''}</td>
+                <td><span class="delete-btn" onclick="deleteEntry('${key}')">&#x2716;</span></td>
+              `;
+              tableBody.appendChild(row);
+            });
+          }
+        });
+      }
+
+      // Delete a book history entry by key (admin only)
+      window.deleteEntry = (key) => {
+        if (confirm("Delete this book from history?")) {
+          db.ref('history/' + key).remove().then(loadHistory);
         }
-      });
-    }
+      };
 
-    // DELETE FUNCTION (for admin only)
-    window.deleteEntry = (key) => {
-      db.ref('history/' + key).remove().then(loadHistory);
-    };
-
-    loadHistory();
-  });
-</script>
+      // Load data on page load
+      loadHistory();
+    });
+  </script>
 </body>
 </html>
