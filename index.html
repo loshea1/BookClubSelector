@@ -1,41 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-  <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Book Club Submission</title>
-  <style>
-    body { font-family: Arial; text-align: center; padding: 1em; }
-    input, button { padding: 8px; margin: 8px; width: 200px; }
-    #countdownTimer { font-weight: bold; color: #b22222; margin-top: 10px; }
 
-      nav a {
-  margin: 0 10px;
-  text-decoration: none;
-  color: #2c5f2d;
-  font-weight: bold;
-}
-nav a:hover {
-  text-decoration: underline;
-}
+  <!-- Firebase SDK -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 1em;
+    }
+
+    input, button {
+      padding: 8px;
+      margin: 8px;
+      width: 200px;
+    }
+
+    #countdownTimer {
+      font-weight: bold;
+      color: #b22222;
+      margin-top: 10px;
+    }
+
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #2c5f2d;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    table {
+      margin: auto;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Navigation Menu -->
   <nav style="margin-bottom: 2em;">
-  <a href="index.html">🏠 Submit</a> |
-  <a href="history.html">📚 History</a> |
-  <a href="availability.html">📆 Availability</a> |
-  <a href="admin.html">🛠️ Admin</a>
-</nav>
-  
-  <h1>📖 Book Club Submission</h1>
-  <p id="countdownTimer" style="font-weight: bold; color: #b22222;"></p>
+    <a href="index.html">🏠 Submit</a> |
+    <a href="history.html">📚 History</a> |
+    <a href="availability.html">📆 Availability</a> |
+    <a href="admin.html">🛠️ Admin</a>
+  </nav>
 
+  <h1>📖 Book Club Submission</h1>
+  <p id="countdownTimer"></p>
+
+  <!-- Submission Form -->
   <div id="formSection">
     <input id="name" placeholder="Your Name"/><br/>
     <input id="title" placeholder="Book Title"/><br/>
@@ -44,8 +73,9 @@ nav a:hover {
     <p id="message"></p>
   </div>
 
+  <!-- Submitted Books Table -->
   <h2>📚 Submitted Books</h2>
-  <table id="submissionTable" border="1" style="margin: auto; margin-top: 20px;">
+  <table id="submissionTable">
     <thead>
       <tr>
         <th>Name</th>
@@ -56,156 +86,158 @@ nav a:hover {
     <tbody></tbody>
   </table>
 
-<script defer>
-  let cutoffDate = null;
-  window.addEventListener('DOMContentLoaded', () => {
-    const firebaseConfig = {
-      apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
-      authDomain: "bookies-availability.firebaseapp.com",
-      databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
-      projectId: "bookies-availability",
-      storageBucket: "bookies-availability.appspot.com",
-      messagingSenderId: "429713911832",
-      appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
-    };
+  <script defer>
+    let cutoffDate = null;
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const hours = [17, 18, 19, 20, 21, 22];
-    
-    const countdownTimer = document.getElementById('countdownTimer');
-    let timerInterval = null;
-    
-    function startCountdown() {
-  if (!cutoffDate) return;
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
+        authDomain: "bookies-availability.firebaseapp.com",
+        databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
+        projectId: "bookies-availability",
+        storageBucket: "bookies-availability.appspot.com",
+        messagingSenderId: "429713911832",
+        appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const countdownTimer = document.getElementById('countdownTimer');
+      let timerInterval = null;
 
-  function updateCountdown() {
-    const now = new Date();
-    const diff = cutoffDate - now;
+      // Start countdown until submission deadline
+      function startCountdown() {
+        if (!cutoffDate) return;
 
-if (diff <= 0) {
-  clearInterval(timerInterval);
-  countdownTimer.textContent = "⛔ Submissions are now closed.";
-  if (!localStorage.getItem("submissionClosedReloaded")) {
-    localStorage.setItem("submissionClosedReloaded", "true");
-    location.reload();
-  }
-  return;
-}
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const mins = Math.floor((diff / (1000 * 60)) % 60);
-    const secs = Math.floor((diff / 1000) % 60);
-    countdownTimer.textContent = `⏳ Time left to submit: ${days}d ${hrs}h ${mins}m ${secs}s`;
-  }
+        function updateCountdown() {
+          const now = new Date();
+          const diff = cutoffDate - now;
 
-  timerInterval = setInterval(updateCountdown, 1000);
-  updateCountdown();
-}
+          if (diff <= 0) {
+            clearInterval(timerInterval);
+            countdownTimer.textContent = "⛔ Submissions are now closed.";
+            if (!localStorage.getItem("submissionClosedReloaded")) {
+              localStorage.setItem("submissionClosedReloaded", "true");
+              location.reload();
+            }
+            return;
+          }
 
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const mins = Math.floor((diff / (1000 * 60)) % 60);
+          const secs = Math.floor((diff / 1000) % 60);
+          countdownTimer.textContent = `⏳ Time left to submit: ${days}d ${hrs}h ${mins}m ${secs}s`;
+        }
 
-db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
-  const deadlineISO = snapshot.val();
-  cutoffDate = new Date(deadlineISO);
-  const now = new Date();
-  
-  if (now < cutoffDate) {
-  localStorage.removeItem("submissionClosedReloaded");
-  startCountdown();  // only call here if still before deadline
-} else {
-    // Deadline passed — check if book already selected
-      countdownTimer.textContent = "⛔ Submissions are now closed.";
-  document.getElementById('formSection').style.display = 'none';
-  localStorage.removeItem("submissionClosedReloaded"); // reset for next round
-    document.getElementById('formSection').style.display = 'none';
-    db.ref('selectedBook').once('value').then(bookSnap => {
-      const selected = bookSnap.val();
+        timerInterval = setInterval(updateCountdown, 1000);
+        updateCountdown();
+      }
 
-      if (selected) {
-        showSelectedBook(selected);
-      } else {
-        db.ref('submissions').once('value').then(subSnap => {
-          const submissions = subSnap.val();
-          const names = Object.keys(submissions);
-          if (names.length === 0) return;
+      // Load and evaluate deadline
+      db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
+        const deadlineISO = snapshot.val();
+        cutoffDate = new Date(deadlineISO);
+        const now = new Date();
 
-          const randomName = names[Math.floor(Math.random() * names.length)];
-          const selected = {
-            ...submissions[randomName],
-            submitter: randomName,
-            date: now.toLocaleDateString()
-          };
+        if (now < cutoffDate) {
+          localStorage.removeItem("submissionClosedReloaded");
+          startCountdown();
+        } else {
+          // Deadline passed — show selected book or select one
+          countdownTimer.textContent = "⛔ Submissions are now closed.";
+          document.getElementById('formSection').style.display = 'none';
+          localStorage.removeItem("submissionClosedReloaded");
 
-          db.ref('selectedBook').set(selected);
-          db.ref('history').push(selected);
-          showSelectedBook(selected);
+          db.ref('selectedBook').once('value').then(bookSnap => {
+            const selected = bookSnap.val();
+            if (selected) {
+              showSelectedBook(selected);
+            } else {
+              db.ref('submissions').once('value').then(subSnap => {
+                const submissions = subSnap.val();
+                if (!submissions) return;
+
+                const names = Object.keys(submissions);
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                const selected = {
+                  ...submissions[randomName],
+                  submitter: randomName,
+                  date: now.toLocaleDateString()
+                };
+
+                db.ref('selectedBook').set(selected);
+                db.ref('history').push(selected);
+                showSelectedBook(selected);
+              });
+            }
+          });
+        }
+      });
+
+      // Load and display existing submissions
+      function loadSubmissions() {
+        db.ref('submissions').once('value').then(snapshot => {
+          const data = snapshot.val() || {};
+          const tbody = document.querySelector('#submissionTable tbody');
+          tbody.innerHTML = '';
+          Object.entries(data).forEach(([name, { title, author }]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${name}</td><td>${title}</td><td>${author}</td>`;
+            tbody.appendChild(row);
+          });
         });
       }
-    });
-  }
-});
-    function loadSubmissions() {
-      db.ref('submissions').once('value').then(snapshot => {
-        const data = snapshot.val() || {};
-        const tbody = document.querySelector('#submissionTable tbody');
-        tbody.innerHTML = '';
-        Object.entries(data).forEach(([name, { title, author }]) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${name}</td><td>${title}</td><td>${author}</td>`;
-          tbody.appendChild(row);
+
+      // Handle submission
+      window.submitEntry = () => {
+        let name = document.getElementById('name').value.trim();
+        const title = document.getElementById('title').value.trim();
+        const author = document.getElementById('author').value.trim();
+        const msg = document.getElementById('message');
+        const submitBtn = document.querySelector('button[onclick="submitEntry()"]');
+
+        if (!name || !title || !author) {
+          msg.textContent = '⚠️ Fill all fields.';
+          return;
+        }
+
+        if (name.toLowerCase() === 'katie') {
+          const which = prompt('Which Katie? (daniels or rohrer)');
+          if (!['daniels', 'rohrer'].includes(which)) return;
+          name = `katie ${which}`;
+        }
+
+        db.ref('submissions/' + name).once('value').then(snapshot => {
+          const existing = snapshot.val();
+          if (existing) {
+            const confirmOverwrite = confirm('You already submitted a book. Overwrite?');
+            if (!confirmOverwrite) return;
+          }
+
+          const entry = { title, author };
+          db.ref('submissions/' + name).set(entry).then(() => {
+            msg.textContent = existing ? '🔁 Re-submitted!' : '✅ Submitted!';
+            submitBtn.textContent = 'Re-submit';
+            document.getElementById('title').value = '';
+            document.getElementById('author').value = '';
+            loadSubmissions();
+          });
         });
-      });
-    }
+      };
 
-window.submitEntry = () => {
-    const now = new Date();
-  
-  let name = document.getElementById('name').value.trim();
-  const title = document.getElementById('title').value.trim();
-  const author = document.getElementById('author').value.trim();
-  const msg = document.getElementById('message');
-  const submitBtn = document.querySelector('button[onclick="submitEntry()"]');
+      // Show selected book after deadline
+      function showSelectedBook(book) {
+        const msg = document.createElement('p');
+        msg.style.fontSize = '1.2em';
+        msg.style.fontWeight = 'bold';
+        msg.style.color = '#2c5f2d';
+        msg.textContent = `🎉 Next book is "${book.title}" by ${book.author} (submitted by ${book.submitter})!`;
+        document.body.appendChild(msg);
+      }
 
-  if (!name || !title || !author) {
-    msg.textContent = '⚠️ Fill all fields.';
-    return;
-  }
-
-  if (name === 'katie') {
-    const which = prompt('Which Katie? (daniels or rohrer)');
-    if (!['daniels', 'rohrer'].includes(which)) return;
-    name = `katie ${which}`;
-  }
-
-  db.ref('submissions/' + name).once('value').then(snapshot => {
-    const existing = snapshot.val();
-    if (existing) {
-      const confirmOverwrite = confirm('You already submitted a book. Overwrite?');
-      if (!confirmOverwrite) return;
-    }
-
-    const entry = { title, author };
-    db.ref('submissions/' + name).set(entry).then(() => {
-      msg.textContent = existing ? '🔁 Re-submitted!' : '✅ Submitted!';
-      submitBtn.textContent = 'Re-submit';
-      document.getElementById('title').value = '';
-      document.getElementById('author').value = '';
       loadSubmissions();
     });
-  });
-};
-   loadSubmissions();
-function showSelectedBook(book) {
-  const msg = document.createElement('p');
-  msg.style.fontSize = '1.2em';
-  msg.style.fontWeight = 'bold';
-  msg.style.color = '#2c5f2d';
-  msg.textContent = `🎉 Next book is "${book.title}" by ${book.author} (submitted by ${book.submitter})!`;
-  document.body.appendChild(msg);
-}
-
-  });
-
-</script>
+  </script>
 </body>
 </html>
