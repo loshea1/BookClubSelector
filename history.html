@@ -107,9 +107,8 @@
               row.innerHTML = `
                 <td>${entry.title || ''}</td>
                 <td>${entry.author || ''}</td>
-                <td>${entry.submitter || ''}</td>
-                <td>${entry.date || ''}</td>
-                <td><span class="delete-btn" onclick="deleteEntry('${key}')">&#x2716;</span></td>
+                <td>${entry.name || ''}</td>
+                <td>${new Date(entry.selectedAt).toLocaleDateString() || ''}</td>
               `;
               tableBody.appendChild(row);
             });
