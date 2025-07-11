@@ -154,14 +154,15 @@ window.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = false;
       }
     });
+    userSelect.selectedIndex - 0;
   }
-
+/*
   userSelect.addEventListener('change', () => {
     const selected = userSelect.value;
     localStorage.setItem('bookiesUser', selected);
     submitBtn.disabled = !selected;
   });
-
+*/
   submitBtn.addEventListener('click', () => {
     const name = userSelect.value.trim();
     const title = document.getElementById('title').value.trim();
