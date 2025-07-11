@@ -173,12 +173,6 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (name.toLowerCase() === 'katie') {
-      const which = prompt('Which Katie? (daniels or rohrer)');
-      if (!['daniels', 'rohrer'].includes(which)) return;
-      name = `katie ${which}`;
-    }
-
     db.ref('submissions/' + name).once('value').then(snapshot => {
       const existing = snapshot.val();
       if (existing && !confirm('You already submitted a book. Overwrite?')) return;
