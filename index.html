@@ -190,7 +190,7 @@ window.addEventListener('DOMContentLoaded', () => {
         name: randomName,
         title: book.title,
         author: book.author,
-        selectedAt: new Date().toISOString()
+        selectedAt: cutoffDate.toISOString()
       };
       db.ref('history').push(historyEntry);
     
