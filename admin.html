@@ -74,7 +74,7 @@
 
   <!-- Availability Section -->
   <h2>Availability Responses</h2>
-  <button onclick="resetAvailability()">🗑️ Reset All Availability Responses</button>
+  <button onclick="resetAvailability()">🗑️ Reset Availability Responses</button>
   <div id="availabilityDisplay"></div>
 
   <!-- Member Management Section -->
@@ -197,27 +197,30 @@
         });
       }
 
-      // Update deadline (book or availability)
-      window.updateDeadline = (key) => {
-        const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
-        const date = input.value;
-        if (!date) return alert('Pick a date/time first');
-        const isoDate = new Date(date).toISOString();
+ window.updateDeadline = (key) => {
+  const input = key === 'bookSubmissionDeadline' ? bookDeadlineInput : availabilityDeadlineInput;
+  const date = input.value;
+  if (!date) return alert('Pick a date/time first');
+  const isoDate = new Date(date).toISOString();
 
-        db.ref('settings/' + key).set(isoDate).then(() => {
-          if (key === 'bookSubmissionDeadline') {
-            db.ref('selectedBook').remove();
+  db.ref('settings/' + key).set(isoDate).then(() => {
+    if (key === 'bookSubmissionDeadline') {
+      db.ref('selectedBook').remove();
 
-            const confirmed = confirm("Do you want to clear the previous book submissions?");
-            if (confirmed) {
-              db.ref('submissions').remove().then(() => {
-                alert("✅ Submissions cleared.");
-              });
-            }
+      db.ref('submissions').once('value').then(snapshot => {
+        if (snapshot.exists()) {
+          const confirmed = confirm("Do you want to clear the previous book submissions?");
+          if (confirmed) {
+            db.ref('submissions').remove().then(() => {
+              alert("✅ Submissions cleared.");
+            });
           }
-          alert('Deadline updated!');
-        });
-      };
+        }
+      });
+    }
+  });
+};
+
 
       // Reset all availability responses
       window.resetAvailability = () => {
