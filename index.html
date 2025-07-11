@@ -148,21 +148,21 @@ window.addEventListener('DOMContentLoaded', () => {
         <option value="" disabled selected>Select your name</option>
         ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
       `;
-      const savedUser = localStorage.getItem('bookiesUser');
+      
+      const savedUser = sessionStorage.getItem('bookiesUser');
       if (savedUser && Object.values(members).includes(savedUser)) {
         userSelect.value = savedUser;
-        submitBtn.disabled = false;
+      } else {
+        userSelect.selectedIndex = 0;
       }
     });
-    userSelect.selectedIndex - 0;
   }
-/*
+  
   userSelect.addEventListener('change', () => {
     const selected = userSelect.value;
-    localStorage.setItem('bookiesUser', selected);
-    submitBtn.disabled = !selected;
+    sessionStorage.setItem('bookiesUser', selected);
   });
-*/
+  
   submitBtn.addEventListener('click', () => {
     const name = userSelect.value.trim();
     const title = document.getElementById('title').value.trim();
