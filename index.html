@@ -86,6 +86,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+    // Clear saved user so it always starts fresh on page load
+  sessionStorage.removeItem('bookiesUser');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submit';
 
   const userSelect = document.getElementById('userSelect');
   const submitBtn = document.getElementById('submitButton');
