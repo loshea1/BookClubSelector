@@ -162,6 +162,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const selected = userSelect.value;
     sessionStorage.setItem('bookiesUser', selected);
     submitBtn.disabled = false;
+    submitBtn.textContent = "Submit";
   });
   
   submitBtn.addEventListener('click', () => {
