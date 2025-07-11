@@ -191,15 +191,20 @@
         });
       }
       
-      function populateNameDropdown() {
+      // Populate dropdown with member names
+      function populateDropdownFromFirebase() {
         db.ref('members').once('value').then(snapshot => {
           const members = snapshot.val() || [];
-          const nameSelect = document.getElementById('name');
-          nameSelect.innerHTML = `<option value="" disabled selected>Select your name</option>` +
-            members.map(name => `<option value="${name}">${name}</option>`).join('');
+          userSelect.innerHTML = `
+          <option value="" disabled selected>Select your name</option>
+          ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
+          `;
+      
+          // Reset selection and disable submit
+          userSelect.selectedIndex = 0;
+          submitBtn.disabled = true;
         });
       }
-      populateNameDropdown();
 
       // Handle submission
       window.submitEntry = () => {
