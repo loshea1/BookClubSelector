@@ -1,89 +1,243 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Club Submission</title>
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/11.10.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/11.10.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/11.10.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  <!-- Firebase SDK -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 1em;
+    }
+
+    input, button {
+      padding: 8px;
+      margin: 8px;
+      width: 200px;
+    }
+
+    #countdownTimer {
+      font-weight: bold;
+      color: #b22222;
+      margin-top: 10px;
+    }
+
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #2c5f2d;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    table {
+      margin: auto;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Menu -->
+  <nav style="margin-bottom: 2em;">
+    <a href="index.html">🏠 Submit</a> |
+    <a href="history.html">📚 History</a> |
+    <a href="availability.html">📆 Availability</a> |
+    <a href="admin.html">🛠️ Admin</a>
+  </nav>
+
+  <h1>📖 Book Club Submission</h1>
+  <p id="countdownTimer"></p>
+
+  <!-- Submission Form -->
+  <div id="formSection">
+    <input id="name" placeholder="Your Name"/><br/>
+    <input id="title" placeholder="Book Title"/><br/>
+    <input id="author" placeholder="Author"/><br/>
+    <button onclick="submitEntry()">Submit</button>
+    <p id="message"></p>
+  </div>
+
+  <!-- Submitted Books Table -->
+  <h2>📚 Submitted Books</h2>
+  <table id="submissionTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Title</th>
+        <th>Author</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script defer>
+    let cutoffDate = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyDlQQOiioFMEsvvJfduLXlDqMN1T5s8cWo",
+        authDomain: "bookies-availability.firebaseapp.com",
+        databaseURL: "https://bookies-availability-default-rtdb.firebaseio.com",
+        projectId: "bookies-availability",
+        storageBucket: "bookies-availability.appspot.com",
+        messagingSenderId: "429713911832",
+        appId: "1:429713911832:web:0da21ca51099bfd8e7536d"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const countdownTimer = document.getElementById('countdownTimer');
+      let timerInterval = null;
+
+      // Start countdown until submission deadline
+      function startCountdown() {
+        if (!cutoffDate) return;
+
+        function updateCountdown() {
+          const now = new Date();
+          const diff = cutoffDate - now;
+
+          if (diff <= 0) {
+            clearInterval(timerInterval);
+            countdownTimer.textContent = "⛔ Submissions are now closed.";
+            if (!localStorage.getItem("submissionClosedReloaded")) {
+              localStorage.setItem("submissionClosedReloaded", "true");
+              location.reload();
+            }
+            return;
+          }
+
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hrs = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const mins = Math.floor((diff / (1000 * 60)) % 60);
+          const secs = Math.floor((diff / 1000) % 60);
+          countdownTimer.textContent = `⏳ Time left to submit: ${days}d ${hrs}h ${mins}m ${secs}s`;
+        }
+
+        timerInterval = setInterval(updateCountdown, 1000);
+        updateCountdown();
       }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
-    </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+      // Load and evaluate deadline
+      db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
+        const deadlineISO = snapshot.val();
+        cutoffDate = new Date(deadlineISO);
+        const now = new Date();
 
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+        if (now < cutoffDate) {
+          localStorage.removeItem("submissionClosedReloaded");
+          startCountdown();
+        } else {
+          // Deadline passed — show selected book or select one
+          countdownTimer.textContent = "⛔ Submissions are now closed.";
+          document.getElementById('formSection').style.display = 'none';
+          localStorage.removeItem("submissionClosedReloaded");
+
+          db.ref('selectedBook').once('value').then(bookSnap => {
+            const selected = bookSnap.val();
+            if (selected) {
+              showSelectedBook(selected);
+            } else {
+              db.ref('submissions').once('value').then(subSnap => {
+                const submissions = subSnap.val();
+                if (!submissions) return;
+
+                const names = Object.keys(submissions);
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                const selected = {
+                  ...submissions[randomName],
+                  submitter: randomName,
+                  date: now.toLocaleDateString()
+                };
+
+                db.ref('selectedBook').set(selected);
+                db.ref('history').push(selected);
+                showSelectedBook(selected);
+              });
+            }
+          });
         }
       });
-    </script>
-  </body>
+
+      // Load and display existing submissions
+      function loadSubmissions() {
+        db.ref('submissions').once('value').then(snapshot => {
+          const data = snapshot.val() || {};
+          const tbody = document.querySelector('#submissionTable tbody');
+          tbody.innerHTML = '';
+          Object.entries(data).forEach(([name, { title, author }]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${name}</td><td>${title}</td><td>${author}</td>`;
+            tbody.appendChild(row);
+          });
+        });
+      }
+
+      // Handle submission
+      window.submitEntry = () => {
+        let name = document.getElementById('name').value.trim();
+        const title = document.getElementById('title').value.trim();
+        const author = document.getElementById('author').value.trim();
+        const msg = document.getElementById('message');
+        const submitBtn = document.querySelector('button[onclick="submitEntry()"]');
+
+        if (!name || !title || !author) {
+          msg.textContent = '⚠️ Fill all fields.';
+          return;
+        }
+
+        if (name.toLowerCase() === 'katie') {
+          const which = prompt('Which Katie? (daniels or rohrer)');
+          if (!['daniels', 'rohrer'].includes(which)) return;
+          name = `katie ${which}`;
+        }
+
+        db.ref('submissions/' + name).once('value').then(snapshot => {
+          const existing = snapshot.val();
+          if (existing) {
+            const confirmOverwrite = confirm('You already submitted a book. Overwrite?');
+            if (!confirmOverwrite) return;
+          }
+
+          const entry = { title, author };
+          db.ref('submissions/' + name).set(entry).then(() => {
+            msg.textContent = existing ? '🔁 Re-submitted!' : '✅ Submitted!';
+            submitBtn.textContent = 'Re-submit';
+            document.getElementById('title').value = '';
+            document.getElementById('author').value = '';
+            loadSubmissions();
+          });
+        });
+      };
+
+      // Show selected book after deadline
+      function showSelectedBook(book) {
+        const msg = document.createElement('p');
+        msg.style.fontSize = '1.2em';
+        msg.style.fontWeight = 'bold';
+        msg.style.color = '#2c5f2d';
+        msg.textContent = `🎉 Next book is "${book.title}" by ${book.author} (submitted by ${book.submitter})!`;
+        document.body.appendChild(msg);
+      }
+
+      loadSubmissions();
+    });
+  </script>
+</body>
 </html>
