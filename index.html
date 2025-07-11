@@ -170,33 +170,60 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function showRandomWinner() {
-  db.ref('submissions').once('value').then(snapshot => {
-    const data = snapshot.val();
-    if (data && Object.keys(data).length > 0) {
-      const names = Object.keys(data);
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const book = data[randomName];
-      const winnerMsg = document.createElement('p');
-      winnerMsg.style.fontSize = '1.2em';
-      winnerMsg.style.fontWeight = 'bold';
-      winnerMsg.style.color = '#2c5f2d';
-      winnerMsg.textContent = `🎉 Next book is "${book.title}" by ${book.author}!`;
-      document.body.appendChild(winnerMsg);
+ function showRandomWinner() {
+  db.ref('selectedBook').once('value').then(existing => {
+    if (existing.exists()) return; // Don't select again if one is already saved
 
-      
-      // Save to history (timestamped)
-      const historyEntry = {
-        name: randomName,
-        title: book.title,
-        author: book.author,
-        selectedAt: cutoffDate.toISOString()
-      };
-      db.ref('history').push(historyEntry);
-    
-    }
+    db.ref('submissions').once('value').then(snapshot => {
+      const data = snapshot.val();
+      if (data && Object.keys(data).length > 0) {
+        const names = Object.keys(data);
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        const book = data[randomName];
+
+        const selected = {
+          name: randomName,
+          title: book.title,
+          author: book.author,
+          selectedAt: new Date().toISOString()
+        };
+
+        // Save to history
+        db.ref('history').push(selected);
+        // Persist the selected book
+        db.ref('selectedBook').set(selected);
+
+        // Display the selected book
+        displayWinner(selected);
+      }
+    });
   });
 }
+
+function displayWinner(entry) {
+  const winnerMsg = document.createElement('p');
+  winnerMsg.style.fontSize = '1.2em';
+  winnerMsg.style.fontWeight = 'bold';
+  winnerMsg.style.color = '#2c5f2d';
+  winnerMsg.textContent = `🎉 Next book is "${entry.title}" by ${entry.author}!`;
+  document.body.appendChild(winnerMsg);
+}
+
+db.ref('selectedBook').once('value').then(snapshot => {
+  const winner = snapshot.val();
+  if (winner) {
+    displayWinner(winner);
+  } else {
+    db.ref('settings/bookSubmissionDeadline').once('value').then(snap => {
+      const deadlineISO = snap.val();
+      const deadline = new Date(deadlineISO);
+      if (new Date() > deadline) {
+        showRandomWinner();
+      }
+    });
+  }
+});
+  
  
   userSelect.addEventListener('change', () => {
     const selected = userSelect.value;
