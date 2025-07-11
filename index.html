@@ -139,6 +139,18 @@ window.addEventListener('DOMContentLoaded', () => {
         tbody.appendChild(row);
       });
     });
+
+    db.ref('settings/bookSubmissionDeadline').once('value').then(snapshot => {
+  const deadlineISO = snapshot.val();
+  if (deadlineISO) {
+    startCountdown(deadlineISO);
+    const deadline = new Date(deadlineISO);
+    if (new Date() > deadline) {
+      showRandomWinner();
+    }
+  }
+});
+
   }
 
   function populateDropdownFromFirebase() {
@@ -157,7 +169,35 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
+  function showRandomWinner() {
+  db.ref('submissions').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (data && Object.keys(data).length > 0) {
+      const names = Object.keys(data);
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      const book = data[randomName];
+      const winnerMsg = document.createElement('p');
+      winnerMsg.style.fontSize = '1.2em';
+      winnerMsg.style.fontWeight = 'bold';
+      winnerMsg.style.color = '#2c5f2d';
+      winnerMsg.textContent = `🎉 Next book is "${book.title}" by ${book.author}!`;
+      document.body.appendChild(winnerMsg);
+
+      
+      // Save to history (timestamped)
+      const historyEntry = {
+        name: randomName,
+        title: book.title,
+        author: book.author,
+        selectedAt: new Date().toISOString()
+      };
+      db.ref('history').push(historyEntry);
+    
+    }
+  });
+}
+ 
   userSelect.addEventListener('change', () => {
     const selected = userSelect.value;
     sessionStorage.setItem('bookiesUser', selected);
