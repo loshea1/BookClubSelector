@@ -161,6 +161,7 @@ window.addEventListener('DOMContentLoaded', () => {
   userSelect.addEventListener('change', () => {
     const selected = userSelect.value;
     sessionStorage.setItem('bookiesUser', selected);
+    submitBtn.disabled = false;
   });
   
   submitBtn.addEventListener('click', () => {
