@@ -157,6 +157,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
   }
 
+    // Populate dropdown with member names
+  function populateDropdownFromFirebase() {
+    db.ref('members').once('value').then(snapshot => {
+      const members = snapshot.val() || [];
+      userSelect.innerHTML = `
+        <option value="" disabled selected>Select your name</option>
+        ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
+      `;
+      // Reset selection and disable submit
+      userSelect.selectedIndex = 0;
+      submitBtn.disabled = true;
+    });
+  }
+  /*
   function populateDropdownFromFirebase() {
     db.ref('members').once('value').then(snapshot => {
       const members = snapshot.val() || [];
@@ -178,6 +192,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     });
   }
+  */
 
  function showRandomWinner() {
   db.ref('selectedBook').once('value').then(existing => {
