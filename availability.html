@@ -165,7 +165,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const members = snapshot.val() || [];
       userSelect.innerHTML = `
         <option value="" disabled selected>Select your name</option>
-        ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
+        ${Object.keys(members).map(name => `<option value="${name}">${name}</option>`).join('')}
       `;
       // Reset selection and disable submit
       userSelect.selectedIndex = 0;
