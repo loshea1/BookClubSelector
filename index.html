@@ -175,6 +175,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function populateDropdownFromFirebase() {
   db.ref('members').once('value').then(snapshot => {
     const members = snapshot.val() || [];
+    console.log("snapshot.val() = ", members); // Add this line
     console.log("Loaded members:", members);
     userSelect.innerHTML = `
       <option value="" disabled selected>Select your name</option>
