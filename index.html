@@ -156,7 +156,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
   }
-
+/*
     // Populate dropdown with member names
   function populateDropdownFromFirebase() {
     db.ref('members').once('value').then(snapshot => {
@@ -170,7 +170,8 @@ window.addEventListener('DOMContentLoaded', () => {
       submitBtn.disabled = true;
     });
   }
-  /*
+  */
+  ////////////////////////////////////////////////////////////////////////////////////////
   function populateDropdownFromFirebase() {
     db.ref('members').once('value').then(snapshot => {
       const members = snapshot.val() || [];
@@ -192,7 +193,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     });
   }
-  */
+  ///////////////////////////////////////////////////////////////////////////
 
  function showRandomWinner() {
   db.ref('selectedBook').once('value').then(existing => {
