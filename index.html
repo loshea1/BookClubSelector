@@ -172,27 +172,27 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   */
   ////////////////////////////////////////////////////////////////////////////////////////
-  function populateDropdownFromFirebase() {
-    db.ref('members').once('value').then(snapshot => {
-      const members = snapshot.val() || [];
-      userSelect.innerHTML = `
-        <option value="" disabled selected>Select your name</option>
-        ${Object.values(members).map(name => `<option value="${name}">${name}</option>`).join('')}
-      `;
-      const savedUser = sessionStorage.getItem('bookiesUser');
-      const memberList = Object.values(members);
-      if (savedUser && memberList.includes(savedUser)) {
-        userSelect.value = savedUser;
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Submit";
-      } else {
-        sessionStorage.removeItem('bookiesUser'); // Clear invalid saved user
-        userSelect.selectedIndex = 0;
-        submitBtn.disabled = true; // Disable until selection
-      }
+function populateDropdownFromFirebase() {
+  db.ref('members').once('value').then(snapshot => {
+    const members = snapshot.val() || [];
+    console.log("Loaded members:", members);
+    userSelect.innerHTML = `
+      <option value="" disabled selected>Select your name</option>
+      ${members.map(name => `<option value="${name}">${name}</option>`).join('')}
+    `;
 
-    });
-  }
+    const savedUser = sessionStorage.getItem('bookiesUser');
+    if (savedUser && members.includes(savedUser)) {
+      userSelect.value = savedUser;
+      submitBtn.disabled = false;
+    } else {
+      sessionStorage.removeItem('bookiesUser');
+      userSelect.selectedIndex = 0;
+      submitBtn.disabled = true;
+    }
+  });
+}
+
   ///////////////////////////////////////////////////////////////////////////
 
  function showRandomWinner() {
