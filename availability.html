@@ -323,13 +323,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   userSelect.addEventListener('change', () => {
     const val = userSelect.value;
-    submitBtn.textContect = "Submit";
+    submitBtn.textContent = "Submit";
     if (!val) {
       availability = {};
       for (const key in cellMap) cellMap[key].className = '';
       submitBtn.disabled = true;
     } else {
       loadUserAvailability(val);
+      submitBtn.disabled = false;
     }
   });
 
